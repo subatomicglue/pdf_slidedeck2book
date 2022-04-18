@@ -3,8 +3,9 @@
 
 #############################################################
 # get parts of the filepath
-# bok=`filepath_path ../bok.m4a`
-# echo $bok
+# filepath=`filepath_path ../bok.m4a`
+# filename=`filepath_name ../bok.m4a`
+# fileext=`filepath_ext ../bok.m4a`
 function filepath_path { local file=$1; echo `dirname -- "${file}"`; }
 function filepath_name { local file=$1; echo `basename -- "${file%.*}"`; }
 function filepath_ext { local file=$1; echo "${file##*.}"; }
@@ -27,7 +28,7 @@ CLEANUP=1
 
 
 #############################################################
-# EXIT/CLEANUP, IGNAL HANDLING
+# EXIT/CLEANUP, SIGNAL HANDLING
 function cleanup()
 {
   if [ "$CLEANUP" == 1 ]; then
