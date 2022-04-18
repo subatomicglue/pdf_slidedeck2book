@@ -1,0 +1,14 @@
+!PS
+% A4 paper is  21.0 × 29.7 cm
+/cm { 28.4 mul } bind def
+/w 21.0 cm def
+/h 29.7 cm def
+/border 
+{ 0.5 cm setlinewidth newpath
+  0 0 moveto w 0 lineto w h lineto 0 h lineto closepath stroke
+} bind def
+/add-border { gsave initgraphics 0 setgray border grestore } def
+/orig-showpage /showpage load def
+/showpage { orig-showpage add-border } def
+add-border
+
