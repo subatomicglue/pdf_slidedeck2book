@@ -1,5 +1,97 @@
 #!/bin/bash
 
+# this script's dir (and location of the other tools)
+scriptpath=$0
+scriptname=`basename "$0"`
+scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cwd=`pwd`
+
+# options:
+MARGIN_SIZE=36
+DPI=300
+BOOK_WIDTH=11
+BOOK_HEIGHT=8.5
+CLEANUP=1
+args=()
+VERBOSE=false
+
+################################
+# scan command line args:
+function usage
+{
+  echo "$scriptname rename audio files by their peak level.  useful for individual instrument samples."
+  echo "Usage: "
+  echo "  $scriptname <file>        (list of pdf files to process)"
+  echo "  $scriptname --help        (this help)"
+  echo "  $scriptname --verbose     (output verbose information)"
+  echo "  $scriptname --margin      (default: ${MARGIN_SIZE})"
+  echo "  $scriptname --dpi         (default: ${DPI})"
+  echo "  $scriptname --width       (default: ${BOOK_WIDTH})"
+  echo "  $scriptname --height      (default: ${BOOK_HEIGHT})"
+  echo "  $scriptname --cleanup     (default: ${CLEANUP})"
+  echo ""
+}
+ARGC=$#
+ARGV=("$@")
+non_flag_args=0
+non_flag_args_required=1
+for ((i = 0; i < ARGC; i++)); do
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--help" ]]; then
+    usage
+    exit -1
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--verbose" ]]; then
+    VERBOSE=true
+    continue
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--margin" ]]; then
+    ((i+=1))
+    MARGIN_SIZE=${ARGV[$i]}
+    $VERBOSE && echo "Parsing Args: Changing margin to $MARGIN_SIZE"
+    continue
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--dpi" ]]; then
+    ((i+=1))
+    DPI=${ARGV[$i]}
+    $VERBOSE && echo "Parsing Args: Changing dpi to $DPI"
+    continue
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--width" ]]; then
+    ((i+=1))
+    BOOK_WIDTH=${ARGV[$i]}
+    $VERBOSE && echo "Parsing Args: Changing book width to $BOOK_WIDTH"
+    continue
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--height" ]]; then
+    ((i+=1))
+    BOOK_HEIGHT=${ARGV[$i]}
+    $VERBOSE && echo "Parsing Args: Changing book height to $BOOK_HEIGHT"
+    continue
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--cleanup" ]]; then
+    ((i+=1))
+    CLEANUP=${ARGV[$i]}
+    $VERBOSE && echo "Parsing Args: Changing cleanup to $CLEANUP"
+    continue
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]:0:2} == "--" ]]; then
+    echo "Unknown option ${ARGV[$i]}"
+    exit -1
+  fi
+
+  args+=("${ARGV[$i]}")
+  $VERBOSE && echo "Parsing Args: Audio: \"${ARGV[$i]}\""
+  ((non_flag_args+=1))
+done
+
+# output help if they're getting it wrong...
+if [ $non_flag_args_required -ne 0 ] && [[ $ARGC -eq 0 || ! $ARGC -ge $non_flag_args_required ]]; then
+  [ $ARGC -gt 0 ] && echo "Expected $non_flag_args_required args, but only got $ARGC"
+  usage
+  exit -1
+fi
+################################
+
 
 #############################################################
 # get parts of the filepath
@@ -9,22 +101,6 @@
 function filepath_path { local file=$1; echo `dirname -- "${file}"`; }
 function filepath_name { local file=$1; echo `basename -- "${file%.*}"`; }
 function filepath_ext { local file=$1; echo "${file##*.}"; }
-
-
-#############################################################
-# CONFIG
-INPUTFILE="$1"
-INPUTFILEPATH=`filepath_path "$INPUTFILE"`
-INPUTFILENAME=`filepath_name "$INPUTFILE"`
-MARGIN_SIZE=36
-DPI=300
-BOOK_WIDTH=11
-BOOK_HEIGHT=8.5
-OUTDIR1=`mktemp -d -t "$INPUTFILENAME-1"`
-OUTDIR2=`mktemp -d -t "$INPUTFILENAME-2"`
-#OUTDIR1="./out"
-#OUTDIR2="./out2"
-CLEANUP=1
 
 
 #############################################################
@@ -135,40 +211,50 @@ function addMarginToPNGs {
   shopt -u nullglob
 }
 
-######################################
-# get dpi of pdf:
-######################################
-echo "dpi of input pdf"
-magick identify -format "%w x %h %x x %y\n" "$INPUTFILE"
 
-######################################
-# CONVERT PDF TO PNGs
-######################################
-echo "CONVERT PDF TO PNGs..."
-pdf2pngs "$INPUTFILE" "$OUTDIR1" "$DPI"
+# do the work:
+for INPUTFILE in "${args[@]}"; do
+  INPUTFILEPATH=`filepath_path "$INPUTFILE"`
+  INPUTFILENAME=`filepath_name "$INPUTFILE"`
+  OUTDIR1=`mktemp -d -t "$INPUTFILENAME-1"`
+  OUTDIR2=`mktemp -d -t "$INPUTFILENAME-2"`
+  echo "processing $INPUTFILE"
+  continue;
 
+  ######################################
+  # get dpi of pdf:
+  ######################################
+  echo "dpi of input pdf"
+  magick identify -format "%w x %h %x x %y\n" "$INPUTFILE"
 
-######################################
-# ADD MARGINS TO PNGs
-######################################
-echo "ADD MARGINS TO PNGs..."
-addMarginToPNGs "$OUTDIR1" "$OUTDIR2" "$((DPI/2))" `python -c "print('{0:0.4f}'.format($BOOK_HEIGHT / $BOOK_WIDTH))"`
-
-
-#####################################
-
-######################################
-# CONVERT PNGs to PDF
-######################################
-echo "CONVERT PNGs to PDF..."
-rm "$INPUTFILEPATH/${INPUTFILENAME}-margins.pdf"
-# -rw-r--r--  1 kevinmeinert  staff    81861538 Apr  1 09:09 grow-jpeg.pdf
-# -rw-r--r--  1 kevinmeinert  staff  1922920649 Apr  1 09:19 grow-lzw.pdf
-# -rw-r--r--  1 kevinmeinert  staff  2249930760 Apr  1 09:22 grow-rle.pdf
-# -rw-r--r--  1 kevinmeinert  staff  1190841219 Apr  1 09:13 grow-zip.pdf
-magick convert -monitor "$OUTDIR2/"*.png -alpha off -set units $DPI -quality 60 -compress jpeg "$INPUTFILEPATH/${INPUTFILENAME}-margins.pdf"
+  ######################################
+  # CONVERT PDF TO PNGs
+  ######################################
+  echo "CONVERT PDF TO PNGs..."
+  pdf2pngs "$INPUTFILE" "$OUTDIR1" "$DPI"
 
 
-echo "Opening '$INPUTFILEPATH/${INPUTFILENAME}-margins.pdf'"
-open "$INPUTFILEPATH/${INPUTFILENAME}-margins.pdf"
+  ######################################
+  # ADD MARGINS TO PNGs
+  ######################################
+  echo "ADD MARGINS TO PNGs..."
+  addMarginToPNGs "$OUTDIR1" "$OUTDIR2" "$((DPI/2))" `python -c "print('{0:0.4f}'.format($BOOK_HEIGHT / $BOOK_WIDTH))"`
 
+
+  #####################################
+
+  ######################################
+  # CONVERT PNGs to PDF
+  ######################################
+  echo "CONVERT PNGs to PDF..."
+  rm "$INPUTFILEPATH/${INPUTFILENAME}-margins.pdf"
+  # -rw-r--r--  1 kevinmeinert  staff    81861538 Apr  1 09:09 grow-jpeg.pdf
+  # -rw-r--r--  1 kevinmeinert  staff  1922920649 Apr  1 09:19 grow-lzw.pdf
+  # -rw-r--r--  1 kevinmeinert  staff  2249930760 Apr  1 09:22 grow-rle.pdf
+  # -rw-r--r--  1 kevinmeinert  staff  1190841219 Apr  1 09:13 grow-zip.pdf
+  magick convert -monitor "$OUTDIR2/"*.png -alpha off -set units $DPI -quality 60 -compress jpeg "$INPUTFILEPATH/${INPUTFILENAME}-margins.pdf"
+
+
+  echo "Opening '$INPUTFILEPATH/${INPUTFILENAME}-margins.pdf'"
+  open "$INPUTFILEPATH/${INPUTFILENAME}-margins.pdf"
+done
