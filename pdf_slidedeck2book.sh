@@ -218,8 +218,8 @@ for INPUTFILE in "${args[@]}"; do
   INPUTFILENAME=`filepath_name "$INPUTFILE"`
   OUTDIR1=`mktemp -d -t "$INPUTFILENAME-1"`
   OUTDIR2=`mktemp -d -t "$INPUTFILENAME-2"`
+  echo "----------"
   echo "processing $INPUTFILE"
-  continue;
 
   ######################################
   # get dpi of pdf:
