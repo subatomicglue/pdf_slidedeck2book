@@ -1,10 +1,9 @@
 # source this file from your bash .sh script
 
-
 function google_download {
   if [[ "$#" -lt 3 || "$#" -gt 4 ]]; then
     echo "${FUNCNAME[0]}"
-    echo "  ${FUNCNAME[0]} <doc|slide|file> <google slides id> <output filename> <pdf|pptx|docx>"
+    echo "  ${FUNCNAME[0]} <doc|slide|file> <google slides id> <output filename> <required for doc or slide:  pdf|pptx|docx>"
     echo ""
     return
   fi
@@ -28,15 +27,31 @@ function google_download {
     return -1
   fi
 
-  # handle large files with CONFIRM
-  #local CONFIRM=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate '"'$URL'"' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p');
-  #echo "CONFIRM: " $CONFIRM;
-  #if [ "$CONFIRM" -ne "" ]; then
-  #  URL="$URL&confirm=$CONFIRM";
-  #fi
+  # use external cookie.txt file:
+  #local COOKIES=""
+  #if [ -f "./cookies.txt" ]; then COOKIES="--use-cookies --load-cookies ./cookies.txt"; fi
+  #if [ -f "/tmp/cookies.txt" ]; then COOKIES="--use-cookies --load-cookies /tmp/cookies.txt"; fi
 
-  echo "$URL"
-  # --load-cookies cookies.txt
-  wget --no-check-certificate --load-cookies /tmp/cookies.txt "$URL" -O "$OUTFILE"
+  echo ""
+  echo "URL: $URL"
+  echo ""
+
+  # simple download (doesn't work for large files)
+  #CMD="wget --no-check-certificate $COOKIES \"$URL&confirm=yes\" -O \"$OUTFILE\""
+
+  # large file download (uses cookie file to bypass some security thing):
+  CMD="wget --load-cookies /tmp/cookies.txt \"https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "https://docs.google.com/uc?export=download&id=$ID" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=$ID\" -O \"$OUTFILE\"; rm /tmp/cookies.txt"
+  echo "$CMD"
+  eval "$CMD"
+
+  if [ `file --mime-type -b "$OUTFILE"` == "text/html" ]; then
+    echo ""
+    echo "====================== WARNING ======================"
+    echo "Your file downloaded with mimetype text/html"
+    echo "It's likely your file isn't shared as \"anyone with the link can view\""
+    echo ""
+    echo "  cat \"$OUTFILE\""   # <-- will show .html data, likely a sign in page
+    echo ""
+  fi
 }
 
