@@ -1,0 +1,25 @@
+{
+  "name": "pdf_slidedeck2book",
+  "version": "1.0.0",
+  "description": "tools to convert PDFs for use in book printing",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/subatomicglue/pdf_slidedeck2book.git"
+  },
+  "keywords": [
+    "book",
+    "printing",
+    "pdf",
+    "tools"
+  ],
+  "author": "subatomicglue",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/subatomicglue/pdf_slidedeck2book/issues"
+  },
+  "homepage": "https://github.com/subatomicglue/pdf_slidedeck2book#readme"
+}
