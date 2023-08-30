@@ -33,7 +33,7 @@ function google_download {
   #if [ -f "/tmp/cookies.txt" ]; then COOKIES="--use-cookies --load-cookies /tmp/cookies.txt"; fi
 
   if [ -f "${OUTFILE}" ]; then
-    echo "Skipping \"${OUTFILE}\" (exists)";
+    echo "Skipping: Download -> \"${OUTFILE}\" (exists)";
     return -1;
   fi
 
@@ -118,8 +118,8 @@ function google_download_artifacts {
   local type=`google_download_type "$URL"`
   local id=`google_download_id "$URL"`
 
-  echo "type=$type"
-  echo "id=$id"
+  #echo "type=$type"
+  #echo "id=$id"
   if [ "$type" == "presentation" ]; then
     google_download_presentation_artifacts "$id" "$OUTFILE"
   elif [ "$type" == "document" ]; then
