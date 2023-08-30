@@ -127,3 +127,23 @@ function google_download_artifacts {
   fi
 }
 
+# process an array:
+#
+# URL_LIST=( \
+# "https://docs.google.com/document/d/<id1>/edit?usp=sharing" "My Happy File 1" \
+# "https://docs.google.com/document/d/<id2>/edit?usp=sharing" "My Happy File 2" \
+# "https://docs.google.com/document/d/<id3>/edit?usp=sharing" "My Happy File 3" \
+# )
+#
+# google_download_multiple_artifacts "${URL_LIST[@]}"
+function google_download_multiple_artifacts() {
+  local URL_LIST=("$@")
+  local URL_LIST_COUNT=${#URL_LIST[@]}
+  local i=0;
+
+  echo "====================== here ${URL_LIST_COUNT}"
+  for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
+    google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"
+  done
+}
+
