@@ -33,7 +33,7 @@ function google_download {
   #if [ -f "/tmp/cookies.txt" ]; then COOKIES="--use-cookies --load-cookies /tmp/cookies.txt"; fi
 
   if [ -f "${OUTFILE}" ]; then
-    echo "File Already Exists \"${OUTFILE}\" (delete or move it away...)";
+    echo "Skipping \"${OUTFILE}\" (exists)";
     return -1;
   fi
 
@@ -126,5 +126,4 @@ function google_download_artifacts {
     google_download_document_artifacts "$id" "$OUTFILE"
   fi
 }
-
 
