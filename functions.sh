@@ -103,11 +103,13 @@ function google_download_document_artifacts {
 }
 
 function google_download_type {
+  local URL="$1"
   local result=`echo "$URL" | sed -r -e 's/^https?:\/\/.*\/(document|presentation)\/d\/([^/]+)\/.*$/\1/g'`
   echo $result
 }
 
 function google_download_id {
+  local URL="$1"
   local result=`echo "$URL" | sed -r -e 's/^https?:\/\/.*\/(document|presentation)\/d\/([^/]+)\/.*$/\2/g'`
   echo $result
 }
