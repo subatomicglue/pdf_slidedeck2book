@@ -110,6 +110,30 @@ function filepath_path { local file=$1; echo `dirname -- "${file}"`; }
 function filepath_name { local file=$1; echo `basename -- "${file%.*}"`; }
 function filepath_ext { local file=$1; echo "${file##*.}"; }
 
+#############################################################
+# time strings
+
+# a date string you can use in filenames YYYYMMDD-HHMMSS
+function filename_timestamp {
+  date '+%Y%m%d-%H%M%S'
+}
+
+# a date string you can use in filenames YYYYMMDD
+function filename_date {
+  date '+%Y%m%d'
+}
+
+# a date string you can use in filenames YYYYMMDD-HHMMSS
+function filename_timestamp_file {
+  local filename="$1"
+  date -r "$filename" '+%Y%m%d-%H%M%S'
+}
+
+# a date string you can use in filenames YYYYMMDD
+function filename_date_file {
+  local filename="$1"
+  date -r "$filename" '+%Y%m%d'
+}
 
 #############################################################
 # EXIT/CLEANUP, SIGNAL HANDLING
@@ -232,7 +256,18 @@ function process {
 
   for INPUTFILE in "${args[@]}"; do
     local INPUTFILENAME=`filepath_name "$INPUTFILE"`
-    local OUTPATH="./$INPUTFILENAME-book.pdf"
+    local INPUTFILETIME=`filename_timestamp_file "$INPUTFILE"`
+    local OUTPATH="./$INPUTFILENAME-book-$INPUTFILETIME.pdf"
+
+    # dumb upgrade
+    #local OLD_OUTPATH="./$INPUTFILENAME-book.pdf"
+    #local OLD_OUTPATH2="./$INPUTFILENAME-book-.pdf"
+    #if [ -f "$OLD_OUTPATH2" ]; then
+    #  mv "$OLD_OUTPATH2" "$OUTPATH"
+    #fi
+    #if [ -f "$OLD_OUTPATH" ]; then
+    #  mv "$OLD_OUTPATH" "$OUTPATH"
+    #fi
 
     # force remove previous file if present
     if [ $FORCE -eq 1 ]; then
