@@ -1,5 +1,27 @@
 # source this file from your bash .sh script
 
+# a date string you can use in filenames YYYYMMDD-HHMMSS
+function filename_timestamp {
+  date '+%Y%m%d-%H%M%S'
+}
+
+# a date string you can use in filenames YYYYMMDD
+function filename_date {
+  date '+%Y%m%d'
+}
+
+# a date string you can use in filenames YYYYMMDD-HHMMSS
+function filename_timestamp_file {
+  local filename="$1"
+  date -r $filename '+%Y%m%d-%H%M%S'
+}
+
+# a date string you can use in filenames YYYYMMDD
+function filename_date_file {
+  local filename="$1"
+  date -r $filename '+%Y%m%d'
+}
+
 function google_download {
   if [[ "$#" -lt 3 || "$#" -gt 4 ]]; then
     echo "${FUNCNAME[0]}"
