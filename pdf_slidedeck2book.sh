@@ -239,7 +239,7 @@ function process {
       rm -f "${OUTPATH}"
     fi
     # skip job if output file already exists
-    if [ -f "${OUTPATH}" ]; then
+    if [[ -f "${OUTPATH}" && "$INPUTFILE" -ot "${OUTPATH}" ]]; then
       echo "Skipping: \"$INPUTFILE\" -> \"$OUTPATH\" (exists)"
       continue
     fi

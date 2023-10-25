@@ -45,12 +45,18 @@ function google_download {
   local QUIET="-q --show-progress"
 
   # simple download (doesn't work for large files)
-  CMD="wget $QUIET --no-check-certificate $COOKIES \"$URL\" -O \"$OUTFILE\""
+  CMD="wget --timestamping $QUIET --no-check-certificate $COOKIES \"$URL\" -O \"$OUTFILE\""
 
   # large file download (uses cookie file to bypass some security thing):
   #CMD="wget $QUIET --load-cookies /tmp/cookies.txt \"${URL}&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "${URL}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=$ID\" -O \"$OUTFILE\"; rm /tmp/cookies.txt"
   #echo "$CMD"
   eval "$CMD"
+
+  if [ ! -f "$OUTFILE" ]; then
+    echo "$CMD"
+    echo "couldn't download \"$OUTFILE\""
+    exit -1;
+  fi
 
   if [ `file --mime-type -b "$OUTFILE"` == "text/html" ]; then
     echo ""
