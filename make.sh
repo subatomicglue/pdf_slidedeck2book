@@ -7,8 +7,8 @@ scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cwd=`pwd`
 
 ####
-source "node_modules/pdf_slidedeck2book/functions.sh"
-PDF2BOOK_CMD="node_modules/pdf_slidedeck2book/pdf_slidedeck2book.sh"
+source "$scriptdir/functions.sh"
+PDF2BOOK_CMD="$scriptdir/pdf_slidedeck2book.sh"
 dt=`filename_timestamp`
 OUT="./out-download-${dt}"
 OUT2="./out-books"
