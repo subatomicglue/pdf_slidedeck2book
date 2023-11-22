@@ -106,18 +106,30 @@ function generate_index() {
   local URL_LIST_COUNT=${#URL_LIST[@]}
   local i=0;
   local ext=""
+  local kind=""
 
   echo "Writing index.html into $(pwd)"
   echo "<ul>" > index.html
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
+    local id=`google_download_id "${URL_LIST[$i]}"`
     local type=`google_download_type "${URL_LIST[$i]}"`
     if [ "$type" == "presentation" ]; then
       ext="pptx"
+      kind="slide"
     elif [ "$type" == "document" ]; then
       ext="docx"
+      kind="doc"
+    else
+      echo "wtf"
+      exit -1
     fi
-    local INPUTFILETIME=`filename_timestamp_file "${URL_LIST[$i + 1]}.pdf"`
-    echo "<li><a href=\"${URL_LIST[$i]}\">${URL_LIST[$i + 1]}</a> [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>] [<a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>] [<a href=\"../out-books/${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>]" >> index.html
+    google_type_url=`google_drive_to_url "$kind" "$id" "$ext"`
+    google_pdf_url=`google_drive_to_url "$kind" "$id" "pdf"`
+    local temp_thing=`filename_timestamp_file "${URL_LIST[$i + 1]}.pdf"`
+    echo "filename_timestamp_file \"${URL_LIST[$i + 1]}.pdf\""
+    echo "$temp_thing"
+    local INPUTFILETIME="$temp_thing"
+    echo "<li><a href=\"${URL_LIST[$i]}\">${URL_LIST[$i + 1]}</a> [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>] [<a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>] [<a href=\"../out-books/${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>] [<a href=\"$google_type_url\">google $ext</a>] [<a href=\"$google_type_url\">google pdf</a>]" >> index.html
   done
   echo "</ul>" >> index.html
 }

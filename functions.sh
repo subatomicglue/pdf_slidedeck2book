@@ -22,20 +22,21 @@ function filename_date_file {
   date -r "$filename" '+%Y%m%d'
 }
 
-function google_download {
+# give a URL to a google drive file
+# returns a URL to an exported docx|pptx or pdf
+function google_drive_to_url {
   if [[ "$#" -lt 3 || "$#" -gt 4 ]]; then
     echo "${FUNCNAME[0]}"
-    echo "  ${FUNCNAME[0]} <doc|slide|file> <google slides id> <output filename> <required for doc or slide:  pdf|pptx|docx>"
+    echo "  ${FUNCNAME[0]} <doc|slide|file> <google slides id> <doctype pdf|pptx|docx>"
     echo ""
     return
   fi
 
   local TYPE="$1"; # slide, doc, file
   local ID="$2";
-  local OUTFILE="$3";
   local DOC_TYPE="pdf";
-  if [[ "$#" -eq 4 ]]; then
-    DOC_TYPE="$4"; # pdf|pptx|docx
+  if [[ "$#" -eq 3 ]]; then
+    DOC_TYPE="$3"; # pdf|pptx|docx
   fi
 
   if [ "$TYPE" == "slide" ]; then
@@ -45,7 +46,24 @@ function google_download {
   elif [ "$TYPE" == "file" ]; then
     local URL="https://drive.google.com/uc?export=download&confirm=yes&id=$ID"
   else
-    echo "not enough args supplied."
+    local URL ""
+  fi
+
+  echo "$URL"
+}
+
+function google_download {
+  if [[ "$#" -lt 3 || "$#" -gt 4 ]]; then
+    echo "${FUNCNAME[0]}"
+    echo "  ${FUNCNAME[0]} <doc|slide|file> <google slides id> <output filename> <required for doc or slide:  pdf|pptx|docx>"
+    echo ""
+    return
+  fi
+
+  local OUTFILE="$3";
+  local URL=`google_drive_to_url "$1" "$2" "$4"`
+  if [ "$URL" == "" ]; then
+    echo "incorrect args supplied. google_drive_to_url \"$@\""
     return -1
   fi
 
@@ -171,7 +189,6 @@ function google_download_multiple_artifacts() {
   local URL_LIST_COUNT=${#URL_LIST[@]}
   local i=0;
 
-  echo "====================== here ${URL_LIST_COUNT}"
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
     google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"
   done
