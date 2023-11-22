@@ -10,8 +10,8 @@ cwd=`pwd`
 source "$scriptdir/functions.sh"
 PDF2BOOK_CMD="$scriptdir/pdf_slidedeck2book.sh"
 dt=`filename_timestamp`
-OUT="./out-download-${dt}"
-OUT2="./out-books"
+OUT="./${dt}-out-download"
+OUT2="./${dt}-out-books"
 
 # options:
 args=()
@@ -65,7 +65,13 @@ fi
 
 if [ ${#args[@]} -gt 0 ]; then
   echo "Setting outdir to ${args[0]}"
-  OUT=${args[0]}
+  OUT="${args[0]}"
+  if [[ ! "$OUT" =~ -download ]]; then
+    echo "out dir is expected to have '-download' in the name, sorry!"
+    exit -1
+  fi
+  OUT2=`echo "$OUT" | sed  "s/-download/-books/"`
+  echo "Setting bookdir to ${OUT2}"
 fi
 if [ ${#args[@]} -gt 1 ]; then
   echo "Setting assetfile to ${args[1]}"
@@ -179,7 +185,7 @@ function generate_index() {
     fi
     google_type_url=`google_drive_to_url "$kind" "$id" "$ext"`
     google_pdf_url=`google_drive_to_url "$kind" "$id" "pdf"`
-    local INPUTFILETIME=`filename_timestamp_file "../out-download/${URL_LIST[$i + 1]}.pdf"`
+    local INPUTFILETIME=`filename_timestamp_file "../$OUT/${URL_LIST[$i + 1]}.pdf"`
     echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [google link to <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>]  [<a href=\"${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>]" >> index-secret.html
     echo "<li><a href=\"${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">${URL_LIST[$i + 1]}</a>" >> index.html
   done
