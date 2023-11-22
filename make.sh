@@ -24,7 +24,7 @@ function usage
 {
   echo "$scriptname  download google slide/docs pdfs, make book pdfs"
   echo "Usage:"
-  echo "  $scriptname <assets.dat> <outdir>   (list of pdf files to process; outdir)"
+  echo "  $scriptname <outdir> <assets.dat>   (list of pdf files to process; outdir)"
   echo "  $scriptname --help                  (this help)"
   echo "  $scriptname --verbose               (output verbose information)"
   echo ""
@@ -64,12 +64,12 @@ fi
 #################################################################333
 
 if [ ${#args[@]} -gt 0 ]; then
-  echo "Setting assetfile to ${args[0]}"
-  ASSETFILE=${args[0]}
+  echo "Setting outdir to ${args[0]}"
+  OUT=${args[0]}
 fi
 if [ ${#args[@]} -gt 1 ]; then
-  echo "Setting outdir to ${args[1]}"
-  OUT=${args[1]}
+  echo "Setting assetfile to ${args[1]}"
+  ASSETFILE=${args[1]}
 fi
 if [ ! -f "$ASSETFILE" ]; then
   echo "\"${ASSETFILE}\" not found"
@@ -125,10 +125,7 @@ function generate_index() {
     fi
     google_type_url=`google_drive_to_url "$kind" "$id" "$ext"`
     google_pdf_url=`google_drive_to_url "$kind" "$id" "pdf"`
-    local temp_thing=`filename_timestamp_file "${URL_LIST[$i + 1]}.pdf"`
-    echo "filename_timestamp_file \"${URL_LIST[$i + 1]}.pdf\""
-    echo "$temp_thing"
-    local INPUTFILETIME="$temp_thing"
+    local INPUTFILETIME=`filename_timestamp_file "${URL_LIST[$i + 1]}.pdf"`
     echo "<li><a href=\"${URL_LIST[$i]}\">${URL_LIST[$i + 1]}</a> [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>] [<a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>] [<a href=\"../out-books/${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>] [<a href=\"$google_type_url\">google $ext</a>] [<a href=\"$google_type_url\">google pdf</a>]" >> index.html
   done
   echo "</ul>" >> index.html
@@ -145,7 +142,7 @@ cd "${OUT2}"
 shopt -s nullglob
 FILES=("../${OUT}/"*".pdf")
 shopt -u nullglob
-CMD="../$PDF2BOOK_CMD $(printf "'%s' " "${FILES[@]}")"
+CMD="$PDF2BOOK_CMD $(printf "'%s' " "${FILES[@]}")"
 #echo "$CMD"
 eval "$CMD"
 
