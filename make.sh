@@ -126,7 +126,7 @@ function generate_index() {
     google_type_url=`google_drive_to_url "$kind" "$id" "$ext"`
     google_pdf_url=`google_drive_to_url "$kind" "$id" "pdf"`
     local INPUTFILETIME=`filename_timestamp_file "${URL_LIST[$i + 1]}.pdf"`
-    echo "<li><a href=\"${URL_LIST[$i]}\">${URL_LIST[$i + 1]}</a> [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>] [<a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>] [<a href=\"../out-books/${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>] [<a href=\"$google_type_url\">google $ext</a>] [<a href=\"$google_type_url\">google pdf</a>]" >> index.html
+    echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [google link to <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>]  [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>; <a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>]  [<a href=\"../out-books/${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>] " >> index.html
   done
   echo "</ul>" >> index.html
 }
@@ -162,17 +162,28 @@ function generate_index() {
   local ext=""
 
   echo "Writing index.html into $(pwd)"
+  echo "<ul>" > index-secret.html
   echo "<ul>" > index.html
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
+    local id=`google_download_id "${URL_LIST[$i]}"`
     local type=`google_download_type "${URL_LIST[$i]}"`
     if [ "$type" == "presentation" ]; then
       ext="pptx"
+      kind="slide"
     elif [ "$type" == "document" ]; then
       ext="docx"
+      kind="doc"
+    else
+      echo "wtf"
+      exit -1
     fi
+    google_type_url=`google_drive_to_url "$kind" "$id" "$ext"`
+    google_pdf_url=`google_drive_to_url "$kind" "$id" "pdf"`
     local INPUTFILETIME=`filename_timestamp_file "../out-download/${URL_LIST[$i + 1]}.pdf"`
-    echo "<li><a href=\"${URL_LIST[$i]}\">${URL_LIST[$i + 1]}</a> [<a href=\"${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>]" >> index.html
+    echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [google link to <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>]  [<a href=\"${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>]" >> index-secret.html
+    echo "<li><a href=\"${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">${URL_LIST[$i + 1]}</a>" >> index.html
   done
+  echo "</ul>" >> index-secret.html
   echo "</ul>" >> index.html
 }
 
