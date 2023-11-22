@@ -20,7 +20,7 @@ VERBOSE=false
 # scan command line args:
 function usage
 {
-  echo "$scriptname rename audio files by their peak level.  useful for individual instrument samples."
+  echo "$scriptname process .pdf files exported from google slides into book form."
   echo "Usage: "
   echo "  $scriptname <file>        (list of pdf files to process)"
   echo "  $scriptname --help        (this help)"
