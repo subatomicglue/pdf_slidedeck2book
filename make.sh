@@ -9,7 +9,7 @@ cwd=`pwd`
 ####
 source "$scriptdir/functions.sh"
 PDF2BOOK_CMD="$scriptdir/pdf_slidedeck2book.sh"
-dt=`filename_timestamp`
+dt=`filename_date`
 OUT="./${dt}-out-download"
 OUT2="./${dt}-out-books"
 
