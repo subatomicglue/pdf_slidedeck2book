@@ -319,10 +319,10 @@ function process {
     magick convert -monitor "$OUTDIR2/"*.png -alpha off -set units $DPI -quality 60 -compress jpeg "${OUTPATH}"
 
     # comparison of [jpeg, lzw, rle, zip] compression schemes:
-    # -rw-r--r--  1 kevinmeinert  staff    81861538 Apr  1 09:09 grow-jpeg.pdf
-    # -rw-r--r--  1 kevinmeinert  staff  1922920649 Apr  1 09:19 grow-lzw.pdf
-    # -rw-r--r--  1 kevinmeinert  staff  2249930760 Apr  1 09:22 grow-rle.pdf
-    # -rw-r--r--  1 kevinmeinert  staff  1190841219 Apr  1 09:13 grow-zip.pdf
+    # -rw-r--r--  1 username  staff    81861538 Apr  1 09:09 grow-jpeg.pdf
+    # -rw-r--r--  1 username  staff  1922920649 Apr  1 09:19 grow-lzw.pdf
+    # -rw-r--r--  1 username  staff  2249930760 Apr  1 09:22 grow-rle.pdf
+    # -rw-r--r--  1 username  staff  1190841219 Apr  1 09:13 grow-zip.pdf
 
     #####################################
     # remove tempdirs
