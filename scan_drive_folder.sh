@@ -86,9 +86,9 @@ do
   typ=$(echo "$f" | sed "s/^.*\.\(gdoc\|gslides\)$/\1/")
 
   if [ "$typ" == "gdoc" ]; then
-    echo "  \"https://docs.google.com/document/d/$id\" \"$name\" \\"
+    echo "\"https://docs.google.com/document/d/$id/edit?usp=sharing\" \"$name\" \\"
   elif [ "$typ" == "gslides" ]; then
-    echo "  \"https://docs.google.com/presentation/d/$id\" \"$name\" \\"
+    echo "\"https://docs.google.com/presentation/d/$id/edit?usp=sharing\" \"$name\" \\"
   fi
 done
 
