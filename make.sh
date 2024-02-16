@@ -86,7 +86,7 @@ if [ ! -f "$ASSETFILE" ]; then
 fi
 
 
-./gdrive_download.sh "${OUT}" "${ASSETFILE}"
+"${scriptdir}"/gdrive_download.sh "${OUT}" "${ASSETFILE}"
 
-./make_books.sh "${OUT}"
+"${scriptdir}"/make_books.sh "${OUT}"
 
