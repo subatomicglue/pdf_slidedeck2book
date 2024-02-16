@@ -115,6 +115,7 @@ function generate_index() {
 
   echo "Writing index.html into $(pwd)"
   echo "<ul>" > index.html
+  echo "<ul>" > index-public.html
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
     local id=`google_download_id "${URL_LIST[$i]}"`
     local type=`google_download_type "${URL_LIST[$i]}"`
@@ -132,8 +133,10 @@ function generate_index() {
     google_pdf_url=`google_drive_to_url "$kind" "$id" "pdf"`
     local INPUTFILETIME=`filename_timestamp_file "${URL_LIST[$i + 1]}.pdf"`
     echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [google link to <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>]  [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>; <a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>]  [<a href=\"../out-books/${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>] " >> index.html
+    echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [ <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>] " >> index-public.html
   done
   echo "</ul>" >> index.html
+  echo "</ul>" >> index-public.html
 }
 
 generate_index "${URL_LIST[@]}"
