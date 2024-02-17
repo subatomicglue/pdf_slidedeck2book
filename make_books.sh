@@ -6,6 +6,8 @@ scriptname=`basename "$0"`
 scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cwd=`pwd`
 
+source "$scriptdir/functions.sh"
+
 # options:
 args=()
 VERBOSE=false
@@ -86,6 +88,7 @@ function generate_index() {
 
   echo "Writing index.html into $(pwd)"
   echo "<ul>" > index.html
+  echo "<ul>" > index-secret.html
   for f in "${FILES[@]}"; do
     echo "---> $f"
     local f=$(echo "$f" | sed "s/^.*\///")
@@ -93,8 +96,27 @@ function generate_index() {
     local t=$(echo "$f" | sed "s/^.*\///" | sed "s/-book-[0-9]*-[0-9]*\..*$//")
     echo "===> $t"
     echo "<li><a href=\"$f\">$t</a>" >> index.html
+
+    # secret:
+    local id=`google_download_id "${URL_LIST[$i]}"`
+    local type=`google_download_type "${URL_LIST[$i]}"`
+    if [ "$type" == "presentation" ]; then
+      ext="pptx"
+      kind="slide"
+    elif [ "$type" == "document" ]; then
+      ext="docx"
+      kind="doc"
+    else
+      echo "wtf"
+      exit -1
+    fi
+    google_type_url=`google_drive_to_url "$kind" "$id" "$ext"`
+    google_pdf_url=`google_drive_to_url "$kind" "$id" "pdf"`
+    local INPUTFILETIME=`filename_timestamp_file "${URL_LIST[$i + 1]}.pdf"`
+    echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [google link to <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>]  [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>; <a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>]  [<a href=\"$t\">book</a>] " >> index-secret.html
   done
   echo "</ul>" >> index.html
+  echo "</ul>" >> index-secret.html
 }
 
 # generate index
