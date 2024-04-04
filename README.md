@@ -33,7 +33,7 @@ How to prepare your book PDF for upload:
 - Run the script:
   - `pdf_slidedeck2book.sh <DownloadedPDF>.pdf`
   - Wait....   (it can be very slow if you have a lot of pages/graphics)
-  - New pdf file outputs next to your original one: `<original>-margins.pdf`
+  - New pdf file outputs next to your original one: `<original filename>-YYYYMMDD-TTTTTT.pdf`
 
 Upload the new PDF to your book publishing service
 
