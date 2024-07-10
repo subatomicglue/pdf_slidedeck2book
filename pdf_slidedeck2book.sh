@@ -13,6 +13,7 @@ BOOK_WIDTH=11
 BOOK_HEIGHT=8.5
 CLEANUP=1
 FORCE=0
+OPEN_PDF_WHEN_DONE=0
 args=()
 VERBOSE=false
 
@@ -24,6 +25,7 @@ function usage
   echo "Usage: "
   echo "  $scriptname <file>        (list of pdf files to process)"
   echo "  $scriptname --help        (this help)"
+  echo "  $scriptname --open        (open the output file after producing it)"
   echo "  $scriptname --verbose     (output verbose information)"
   echo "  $scriptname --margin      (default: --margin ${MARGIN_SIZE})"
   echo "  $scriptname --dpi         (default: --dpi ${DPI})"
@@ -40,6 +42,10 @@ non_flag_args_required=1
 for ((i = 0; i < ARGC; i++)); do
   if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--help" ]]; then
     usage
+    exit -1
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--open" ]]; then
+    OPEN_PDF_WHEN_DONE=1
     exit -1
   fi
   if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--verbose" ]]; then
@@ -330,8 +336,10 @@ function process {
 
     #####################################
     # open the new pdf
-    echo "${DECO_BEGIN}Opening '${OUTPATH}'${DECO_END}"
-    open "${OUTPATH}"
+    if [ "$OPEN_PDF_WHEN_DONE" == "1" ]; then
+      echo "${DECO_BEGIN}Opening '${OUTPATH}'${DECO_END}"
+      open "${OUTPATH}"
+    fi
   done
 }
 

@@ -98,6 +98,14 @@ function google_download {
     exit -1;
   fi
 
+  local file_size=$(wc -c <"$OUTFILE")
+  if [ $file_size -eq 0 ]; then
+    echo "$CMD"
+    echo "couldn't download \"$OUTFILE\""
+    rm $OUTFILE
+    exit -1;
+  fi
+
   if [ `file --mime-type -b "$OUTFILE"` == "text/html" ]; then
     echo ""
     echo "====================== WARNING ======================"
