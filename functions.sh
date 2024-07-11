@@ -147,7 +147,7 @@ function google_download_presentation_artifacts {
     echo "[FAILED] google_download slide \"${id}\" \"${filename}.pdf\" pdf"
     return -1
   fi
-  if ! google_download slide "${id}" "${filename}.pptx" pptx
+  if ! google_download slide "${id}" "${filename}.pptx" pptx; then
     echo "[FAILED] google_download slide \"${id}\" \"${filename}.pptx\" pptx"
     return -1
   fi
