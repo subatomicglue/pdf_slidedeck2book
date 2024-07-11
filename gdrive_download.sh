@@ -129,6 +129,7 @@ function generate_index() {
     if [ "${URL_LIST[$i]}" == "" ]; then
       echo "</ul><ul>" >> index.html
       echo "</ul><ul>" >> index-public.html
+      echo "</ul><ul>" >> index-public2.html
       continue
     fi
     local id=`google_download_id "${URL_LIST[$i]}"`
@@ -149,9 +150,11 @@ function generate_index() {
     local ANNOTATION="${URL_LIST[$i + 2]}"
     echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [google link to <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>]  [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>; <a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>]  [<a href=\"../out-books/${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>] - $ANNOTATION " >> index.html
     echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [ <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>] - $ANNOTATION " >> index-public.html
+    echo "<li><a href=\"${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">${URL_LIST[$i + 1]}</a> $ANNOTATION" >> index-public2.html
   done
   echo "</ul>" >> index.html
   echo "</ul>" >> index-public.html
+  echo "</ul>" >> index-public2.html
 }
 
 generate_index "${URL_LIST[@]}"
