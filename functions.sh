@@ -74,7 +74,7 @@ function google_download {
 
   if [ -f "${OUTFILE}" ]; then
     echo "Skipping: Download -> \"${OUTFILE}\" (exists)";
-    return -1;
+    return true; # all good, we got it
   fi
 
   echo ""
