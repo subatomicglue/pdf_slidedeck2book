@@ -95,7 +95,16 @@ echo "Downloading to: \"${OUT}\""
 mkdir -p "${OUT}"
 cd "${OUT}"
 
-google_download_multiple_artifacts "${URL_LIST[@]}"
+if ! google_download_multiple_artifacts "${URL_LIST[@]}"; then
+  echo "[FAILED] to download"
+  echo "Command:"
+  echo "   google_download_multiple_artifacts \"${URL_LIST[@]}\""
+  echo ""
+  echo "URL List:"
+  echo "${URL_LIST[@]}"
+  echo ""
+  exit -1
+fi
 
 # generate index.html:
 #
