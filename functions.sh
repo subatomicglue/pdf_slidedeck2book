@@ -95,7 +95,7 @@ function google_download {
     echo "Command was:"
     echo "   $CMD"
     echo ""
-    return -1;
+    return false;
   fi
 
   if [ ! -f "$OUTFILE" ]; then
@@ -103,7 +103,7 @@ function google_download {
     echo "Command was:"
     echo "   $CMD"
     echo ""
-    exit -1;
+    exit false;
   fi
 
   local file_size=$(wc -c <"$OUTFILE")
@@ -114,7 +114,7 @@ function google_download {
     echo ""
     echo "[INFO] Removing 0 sized \"$OUTFILE\""
     rm "$OUTFILE"
-    exit -1;
+    exit false;
   fi
 
   if [ `file --mime-type -b "$OUTFILE"` == "text/html" ]; then
@@ -129,8 +129,9 @@ function google_download {
 
   if [ ! -f "${OUTFILE}" ]; then
     echo "File did not Download!! \"${OUTFILE}\" (see above errors)";
-    return -1;
+    return false;
   fi
+  return true
 }
 
 function google_download_presentation_artifacts {
@@ -145,11 +146,11 @@ function google_download_presentation_artifacts {
 
   if ! google_download slide "${id}" "${filename}.pdf" pdf; then
     echo "[FAILED] google_download slide \"${id}\" \"${filename}.pdf\" pdf"
-    return -1
+    return false
   fi
   if ! google_download slide "${id}" "${filename}.pptx" pptx; then
     echo "[FAILED] google_download slide \"${id}\" \"${filename}.pptx\" pptx"
-    return -1
+    return false
   fi
   return true
 }
@@ -166,11 +167,11 @@ function google_download_document_artifacts {
 
   if ! google_download doc "${id}" "${filename}.pdf" pdf; then
     echo "[FAILED] google_download doc \"${id}\" \"${filename}.pdf\" pdf"
-    return -1
+    return false
   fi
   if ! google_download doc "${id}" "${filename}.docx" docx; then
     echo "[FAILED] google_download doc \"${id}\" \"${filename}.docx\" docx"
-    return -1
+    return false
   fi
   return true
 }
@@ -204,17 +205,17 @@ function google_download_artifacts {
   if [ "$type" == "presentation" ]; then
     if ! google_download_presentation_artifacts "$id" "$OUTFILE"; then
       echo "[FAILED] google_download_presentation_artifacts \"$id\" \"$OUTFILE\""
-      return -1
+      return false
     fi
   elif [ "$type" == "document" ]; then
     google_download_document_artifacts "$id" "$OUTFILE"
     if ! google_download_document_artifacts "$id" "$OUTFILE"; then
       echo "[FAILED] google_download_document_artifacts \"$id\" \"$OUTFILE\""
-      return -1
+      return false
     fi
   else
     echo "[FAILED] google_download_artifacts:  unknown type \"$type\" not handled"
-    return -1
+    return false
   fi
   return true
 }
@@ -236,7 +237,7 @@ function google_download_multiple_artifacts() {
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
     if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"; then
       echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\""
-      return -1
+      return false
     fi
   done
 
