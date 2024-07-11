@@ -111,17 +111,21 @@ function escapeHTML() {
 function generate_index() {
   local FILES=("$@")
 
-  echo "Writing index.html into $(pwd)"
-  echo "<ul>" > index.html
+  local INDEXFILE="index-simple-listing.html"
+  echo "Writing \"$INDEXFILE\" into $(pwd)"
+  echo "<ul>" > "$INDEXFILE"
   for f in "${FILES[@]}"; do
     echo "---> $f"
     local f=$(echo "$f" | sed "s/^.*\///")
     echo "---> $f"
     local t=$(echo "$f" | sed "s/^.*\///" | sed "s/-book-[0-9]*-[0-9]*\..*$//")
     echo "===> $t"
-    echo "<li><a href=\"$(encodeURI "$f")\">$(escapeHTML "$t")</a>" >> index.html
+    echo "<li><a href=\"$(encodeURI "$f")\">$(escapeHTML "$t")</a>" >> "$INDEXFILE"
   done
-  echo "</ul>" >> index.html
+  echo "</ul>" >> "$INDEXFILE"
+
+  INDEXFILE="index.html"
+  cp "$INDIR/index-public2.html" "$INDEXFILE"
 }
 
 # generate index
