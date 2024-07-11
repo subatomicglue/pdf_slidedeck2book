@@ -113,8 +113,15 @@ function escapeHTML() {
 # Usage: generate_index *.pdf
 function generate_index() {
   local FILES=("$@")
+  local INDEXFILE="index.html"
 
-  local INDEXFILE="index-simple-listing.html"
+  # write the book index file, organized by original assets.dat + annotations
+  if [ -f "$INDIR/index-public2.html" ]; then
+    cp "$INDIR/index-public2.html" "$INDEXFILE"
+    INDEXFILE="index-simple-listing.html"
+  fi
+
+  # write an inventory of whats in the directory
   echo "Writing \"$INDEXFILE\" into $(pwd)"
   echo "<ul>" > "$INDEXFILE"
   for f in "${FILES[@]}"; do
@@ -126,10 +133,6 @@ function generate_index() {
     echo "<li><a href=\"$(encodeURI "$f")\">$(escapeHTML "$t")</a>" >> "$INDEXFILE"
   done
   echo "</ul>" >> "$INDEXFILE"
-
-  if [ -f "../$INDIR/index-public2.html"
-  INDEXFILE="index.html"
-  cp "$INDIR/index-public2.html" "$INDEXFILE"
 }
 
 # generate index
