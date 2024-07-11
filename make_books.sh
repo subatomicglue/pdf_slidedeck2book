@@ -117,6 +117,7 @@ function generate_index() {
 
   # write the book index file, organized by original assets.dat + annotations
   if [ -f "$INDIR/index-public2.html" ]; then
+    echo "Writing \"$INDEXFILE\" into $(pwd)"
     cp "$INDIR/index-public2.html" "$INDEXFILE"
     INDEXFILE="index-simple-listing.html"
   fi

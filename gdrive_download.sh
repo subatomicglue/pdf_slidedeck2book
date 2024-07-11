@@ -106,6 +106,22 @@ if ! google_download_multiple_artifacts "${URL_LIST[@]}"; then
   exit -1
 fi
 
+function encodeURI() {
+  local uri="$1"
+  node -e "console.log( encodeURI( \"$uri\" ) )"
+}
+
+function escapeHTML() {
+  local str="$1"
+  str=$(echo "$str" | sed -e "s/&/\\&amp;/g")
+  str=$(echo "$str" | sed -e "s/</\\&lt;/g")
+  str=$(echo "$str" | sed -e "s/>/\\&gt;/g")
+  str=$(echo "$str" | sed -e "s/'/\\&#39;/g")
+  str=$(echo "$str" | sed -e "s/\"/\\&quot;/g")
+  str=$(echo "$str" | sed -e "s/’/\\&#146;/g")
+  echo "$str"
+}
+
 # generate index.html:
 #
 # URL_LIST=( \
@@ -151,7 +167,7 @@ function generate_index() {
     local ANNOTATION="${URL_LIST[$i + 2]}"
     echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [google link to <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>]  [<a href=\"${URL_LIST[$i + 1]}.$ext\">$ext</a>; <a href=\"${URL_LIST[$i + 1]}.pdf\">pdf</a>]  [<a href=\"../out-books/${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">book</a>] - $ANNOTATION " >> index.html
     echo "<li><strong>${URL_LIST[$i + 1]}</strong> - [ <a href=\"${URL_LIST[$i]}\">$kind</a>; <a href=\"$google_type_url\">$ext</a>; <a href=\"$google_pdf_url\">pdf</a>] - $ANNOTATION " >> index-public.html
-    echo "<li><a href=\"${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf\">${URL_LIST[$i + 1]}</a> $ANNOTATION" >> index-public2.html
+    echo "<li><a href=\"$(encodeURI "${URL_LIST[$i + 1]}-book-$INPUTFILETIME.pdf")\">$(escapeHTML "${URL_LIST[$i + 1]}")</a> $(escapeHTML "$ANNOTATION")" >> index-public2.html
   done
   echo "</ul>" >> index.html
   echo "</ul>" >> index-public.html
