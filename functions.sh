@@ -90,18 +90,29 @@ function google_download {
   # large file download (uses cookie file to bypass some security thing):
   #CMD="wget $QUIET --load-cookies /tmp/cookies.txt \"${URL}&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "${URL}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=$ID\" -O \"$OUTFILE\"; rm /tmp/cookies.txt"
   #echo "$CMD"
-  eval "$CMD"
+  if ! eval "$CMD"; then
+    echo "[FAILED] Download of \"$OUTFILE\" failed"
+    echo "Command was:"
+    echo "   $CMD"
+    echo ""
+    return -1;
+  fi
 
   if [ ! -f "$OUTFILE" ]; then
-    echo "$CMD"
-    echo "couldn't download \"$OUTFILE\""
+    echo "[FAILED] couldn't download \"$OUTFILE\""
+    echo "Command was:"
+    echo "   $CMD"
+    echo ""
     exit -1;
   fi
 
   local file_size=$(wc -c <"$OUTFILE")
   if [ $file_size -eq 0 ]; then
-    echo "$CMD"
-    echo "couldn't download \"$OUTFILE\""
+    echo "[FAILED] couldn't download \"$OUTFILE\""
+    echo "Command was:"
+    echo "   $CMD"
+    echo ""
+    echo "[INFO] Removing 0 sized \"$OUTFILE\""
     rm "$OUTFILE"
     exit -1;
   fi
@@ -132,8 +143,15 @@ function google_download_presentation_artifacts {
   local id="$1"
   local filename="$2"
 
-  google_download slide "${id}" "${filename}.pdf" pdf
-  google_download slide "${id}" "${filename}.pptx" pptx
+  if ! google_download slide "${id}" "${filename}.pdf" pdf; then
+    echo "[FAILED] google_download slide \"${id}\" \"${filename}.pdf\" pdf"
+    return -1
+  fi
+  if ! google_download slide "${id}" "${filename}.pptx" pptx
+    echo "[FAILED] google_download slide \"${id}\" \"${filename}.pptx\" pptx"
+    return -1
+  fi
+  return true
 }
 
 function google_download_document_artifacts {
@@ -146,8 +164,15 @@ function google_download_document_artifacts {
   local id="$1"
   local filename="$2"
 
-  google_download doc "${id}" "${filename}.pdf" pdf
-  google_download doc "${id}" "${filename}.docx" docx
+  if ! google_download doc "${id}" "${filename}.pdf" pdf; then
+    echo "[FAILED] google_download doc \"${id}\" \"${filename}.pdf\" pdf"
+    return -1
+  fi
+  if ! google_download doc "${id}" "${filename}.docx" docx; then
+    echo "[FAILED] google_download doc \"${id}\" \"${filename}.docx\" docx"
+    return -1
+  fi
+  return true
 }
 
 function google_download_type {
@@ -177,10 +202,21 @@ function google_download_artifacts {
   #echo "type=$type"
   #echo "id=$id"
   if [ "$type" == "presentation" ]; then
-    google_download_presentation_artifacts "$id" "$OUTFILE"
+    if ! google_download_presentation_artifacts "$id" "$OUTFILE"; then
+      echo "[FAILED] google_download_presentation_artifacts \"$id\" \"$OUTFILE\""
+      return -1
+    fi
   elif [ "$type" == "document" ]; then
     google_download_document_artifacts "$id" "$OUTFILE"
+    if ! google_download_document_artifacts "$id" "$OUTFILE"; then
+      echo "[FAILED] google_download_document_artifacts \"$id\" \"$OUTFILE\""
+      return -1
+    fi
+  else
+    echo "[FAILED] google_download_artifacts:  unknown type \"$type\" not handled"
+    return -1
   fi
+  return true
 }
 
 # process an array:
@@ -198,7 +234,12 @@ function google_download_multiple_artifacts() {
   local i=0;
 
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
-    google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"
+    if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"; then
+      echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\""
+      return -1
+    fi
   done
+
+  return true
 }
 
