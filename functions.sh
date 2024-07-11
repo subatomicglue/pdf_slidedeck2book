@@ -74,7 +74,7 @@ function google_download {
 
   if [ -f "${OUTFILE}" ]; then
     echo "Skipping: Download -> \"${OUTFILE}\" (exists)";
-    return true; # all good, we got it
+    return 0; # all good, we got it
   fi
 
   echo ""
@@ -131,7 +131,7 @@ function google_download {
     echo "File did not Download!! \"${OUTFILE}\" (see above errors)";
     return -1;
   fi
-  return true
+  return 0
 }
 
 function google_download_presentation_artifacts {
@@ -152,7 +152,7 @@ function google_download_presentation_artifacts {
     echo "[FAILED] google_download slide \"${id}\" \"${filename}.pptx\" pptx"
     return -1
   fi
-  return true
+  return 0
 }
 
 function google_download_document_artifacts {
@@ -173,7 +173,7 @@ function google_download_document_artifacts {
     echo "[FAILED] google_download doc \"${id}\" \"${filename}.docx\" docx"
     return -1
   fi
-  return true
+  return 0
 }
 
 function google_download_type {
@@ -217,7 +217,7 @@ function google_download_artifacts {
     echo "[FAILED] google_download_artifacts:  unknown type \"$type\" not handled"
     return -1
   fi
-  return true
+  return 0
 }
 
 # process an array:
@@ -241,6 +241,6 @@ function google_download_multiple_artifacts() {
     fi
   done
 
-  return true
+  return 0
 }
 
