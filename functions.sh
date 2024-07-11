@@ -235,9 +235,12 @@ function google_download_multiple_artifacts() {
   local i=0;
 
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 3 )); do
-    if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"; then
-      echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\""
-      return -1
+    # whitespace placeholders are skipped, they'll be used by index.html generator for list breaks.
+    if [ "${URL_LIST[$i]}" != "" ]; then
+      if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"; then
+        echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\""
+        return -1
+      fi
     fi
   done
 
