@@ -235,8 +235,8 @@ function google_download_multiple_artifacts() {
   local i=0;
 
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 3 )); do
-    if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}" "${URL_LIST[$i + 2]}"; then
-      echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\" \"${URL_LIST[$i + 2]}\""
+    if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"; then
+      echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\""
       return -1
     fi
   done
