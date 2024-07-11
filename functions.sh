@@ -95,7 +95,7 @@ function google_download {
     echo "Command was:"
     echo "   $CMD"
     echo ""
-    return false;
+    return -1;
   fi
 
   if [ ! -f "$OUTFILE" ]; then
@@ -129,7 +129,7 @@ function google_download {
 
   if [ ! -f "${OUTFILE}" ]; then
     echo "File did not Download!! \"${OUTFILE}\" (see above errors)";
-    return false;
+    return -1;
   fi
   return true
 }
@@ -146,11 +146,11 @@ function google_download_presentation_artifacts {
 
   if ! google_download slide "${id}" "${filename}.pdf" pdf; then
     echo "[FAILED] google_download slide \"${id}\" \"${filename}.pdf\" pdf"
-    return false
+    return -1
   fi
   if ! google_download slide "${id}" "${filename}.pptx" pptx; then
     echo "[FAILED] google_download slide \"${id}\" \"${filename}.pptx\" pptx"
-    return false
+    return -1
   fi
   return true
 }
@@ -167,11 +167,11 @@ function google_download_document_artifacts {
 
   if ! google_download doc "${id}" "${filename}.pdf" pdf; then
     echo "[FAILED] google_download doc \"${id}\" \"${filename}.pdf\" pdf"
-    return false
+    return -1
   fi
   if ! google_download doc "${id}" "${filename}.docx" docx; then
     echo "[FAILED] google_download doc \"${id}\" \"${filename}.docx\" docx"
-    return false
+    return -1
   fi
   return true
 }
@@ -205,17 +205,17 @@ function google_download_artifacts {
   if [ "$type" == "presentation" ]; then
     if ! google_download_presentation_artifacts "$id" "$OUTFILE"; then
       echo "[FAILED] google_download_presentation_artifacts \"$id\" \"$OUTFILE\""
-      return false
+      return -1
     fi
   elif [ "$type" == "document" ]; then
     google_download_document_artifacts "$id" "$OUTFILE"
     if ! google_download_document_artifacts "$id" "$OUTFILE"; then
       echo "[FAILED] google_download_document_artifacts \"$id\" \"$OUTFILE\""
-      return false
+      return -1
     fi
   else
     echo "[FAILED] google_download_artifacts:  unknown type \"$type\" not handled"
-    return false
+    return -1
   fi
   return true
 }
@@ -237,7 +237,7 @@ function google_download_multiple_artifacts() {
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
     if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"; then
       echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\""
-      return false
+      return -1
     fi
   done
 
