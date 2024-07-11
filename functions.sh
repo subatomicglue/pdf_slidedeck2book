@@ -223,9 +223,9 @@ function google_download_artifacts {
 # process an array:
 #
 # URL_LIST=( \
-# "https://docs.google.com/document/d/<id1>/edit?usp=sharing" "My Happy File 1" \
-# "https://docs.google.com/document/d/<id2>/edit?usp=sharing" "My Happy File 2" \
-# "https://docs.google.com/document/d/<id3>/edit?usp=sharing" "My Happy File 3" \
+# "https://docs.google.com/document/d/<id1>/edit?usp=sharing" "My Happy File 1" "some comments" \
+# "https://docs.google.com/document/d/<id2>/edit?usp=sharing" "My Happy File 2" "some comments" \
+# "https://docs.google.com/document/d/<id3>/edit?usp=sharing" "My Happy File 3" "some comments" \
 # )
 #
 # google_download_multiple_artifacts "${URL_LIST[@]}"
@@ -234,9 +234,9 @@ function google_download_multiple_artifacts() {
   local URL_LIST_COUNT=${#URL_LIST[@]}
   local i=0;
 
-  for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 2 )); do
-    if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"; then
-      echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\""
+  for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 3 )); do
+    if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}" "${URL_LIST[$i + 2]}"; then
+      echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\" \"${URL_LIST[$i + 2]}\""
       return -1
     fi
   done
