@@ -69,6 +69,9 @@ if [ ${#args[@]} -gt 0 ]; then
     echo "in dir is expected to have '-download' in the name, sorry!"
     exit -1
   fi
+  if [[ "$INDIR" != /* ]]; then
+    INDIR="$cwd/$INDIR"
+  fi
 fi
 OUTDIR="$(echo "$INDIR" | sed  "s/-download//")-books"
 if [ ${#args[@]} -gt 1 ]; then
@@ -124,6 +127,7 @@ function generate_index() {
   done
   echo "</ul>" >> "$INDEXFILE"
 
+  if [ -f "../$INDIR/index-public2.html"
   INDEXFILE="index.html"
   cp "$INDIR/index-public2.html" "$INDEXFILE"
 }
