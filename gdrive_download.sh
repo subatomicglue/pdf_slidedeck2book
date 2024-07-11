@@ -125,6 +125,7 @@ function generate_index() {
   echo "Writing index.html into $(pwd)"
   echo "<ul>" > index.html
   echo "<ul>" > index-public.html
+  echo "<ul>" > index-public2.html
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 3 )); do
     if [ "${URL_LIST[$i]}" == "" ]; then
       echo "</ul><ul>" >> index.html
