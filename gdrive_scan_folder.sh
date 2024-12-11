@@ -77,13 +77,13 @@ files=("${INDIR}/"**/+(*.gslides|*.gdoc))
 #echo "${files[@]}"         # print array elements
 for f in "${files[@]}"
 do
-  id=$(echo "$f" | python3 -c "import re, sys, json;"$'\n'"for f in sys.stdin: f=f.rstrip(); c=(re.sub(  \"^\\s*//.*$\",\"\",open(f, 'r').read(),flags=re.MULTILINE ) if f !='' else ''); id=json.loads( c )['doc_id'] if c != '' else ''; print( id )")
+  id=$(echo "$f" | python3 -c "import re, sys, json;"$'\n'"for f in sys.stdin: f=f.rstrip(); c=(re.sub(  r'^\s*//.*$',\"\",open(f, 'r').read(),flags=re.MULTILINE ) if f !='' else ''); id=json.loads( c )['doc_id'] if c != '' else ''; print( id )")
 
   #name=$(echo "$f" | python3 -c "import re, sys, json;"$'\n'"for f in sys.stdin: f=f.rstrip(); n=re.sub(r'^.*/([^/]+)\.(gdoc|gslides)$',r'\1',f); print( n )")
-  name=$(echo "$f" | sed "s/^.*\///" | sed "s/\..*$//")
+  name=$(echo "$f" | sed -E "s/^.*\///" | sed "s/\..*$//")
 
   #typ=$(echo "$f" | python3 -c "import re, sys, json;"$'\n'"for f in sys.stdin: f=f.rstrip(); t=re.sub(r'^.*/([^/]+)\.(gdoc|gslides)$',r'\2',f); print( t )")
-  typ=$(echo "$f" | sed "s/^.*\.\(gdoc\|gslides\)$/\1/")
+  typ=$(echo "$f" | sed -E "s/^.*\.(gdoc|gslides)$/\1/")
 
   if [ "$typ" == "gdoc" ]; then
     echo "\"https://docs.google.com/document/d/$id/edit?usp=sharing\" \"$name\" \"\" \\"
