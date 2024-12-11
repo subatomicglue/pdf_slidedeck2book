@@ -79,9 +79,11 @@ for f in "${files[@]}"
 do
   id=$(echo "$f" | python3 -c "import re, sys, json;"$'\n'"for f in sys.stdin: f=f.rstrip(); c=(re.sub(  r'^\s*//.*$',\"\",open(f, 'r').read(),flags=re.MULTILINE ) if f !='' else ''); id=json.loads( c )['doc_id'] if c != '' else ''; print( id )")
 
+  # requires gnu-sed (macos use "brew install gsed")
   #name=$(echo "$f" | python3 -c "import re, sys, json;"$'\n'"for f in sys.stdin: f=f.rstrip(); n=re.sub(r'^.*/([^/]+)\.(gdoc|gslides)$',r'\1',f); print( n )")
   name=$(echo "$f" | sed -E "s/^.*\///" | sed "s/\..*$//")
 
+  # requires gnu-sed (macos use "brew install gsed")
   #typ=$(echo "$f" | python3 -c "import re, sys, json;"$'\n'"for f in sys.stdin: f=f.rstrip(); t=re.sub(r'^.*/([^/]+)\.(gdoc|gslides)$',r'\2',f); print( t )")
   typ=$(echo "$f" | sed -E "s/^.*\.(gdoc|gslides)$/\1/")
 
