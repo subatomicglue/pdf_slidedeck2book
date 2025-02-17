@@ -231,9 +231,16 @@ if (LIST_ONLY) {
       await child.kill('SIGTERM'); // Send a termination signal
       process.exit( 0 );
     }
-    
+
+    let filename=undefined;
     async function doNext() {
       if (0 < downloadUrls.length) {
+        // pop off the name
+        if (downloadUrls[0].match( /^https?:\/\// ) == undefined) {
+          filename = downloadUrls[0];
+          downloadUrls = downloadUrls.slice(1);
+        }
+
         // pop the next url off the front
         let url = lib.getExportUrl( lib.getType( downloadUrls[0] ), lib.getID( downloadUrls[0] ), format );
         console.log( `downloading: ${downloadUrls[0]} ${lib.getType( downloadUrls[0] )} ${lib.getID( downloadUrls[0] )} ${url}` )
@@ -252,48 +259,50 @@ if (LIST_ONLY) {
     }
 
     // we can call this on a sharing URL to see what filetype is it
-    async function examineSharingURL(shareUrl) {
-      // Navigate to the Google Drive sharing URL
-      await Page.navigate({ url: shareUrl });
-      await Page.loadEventFired(); // Wait until the page has fully loaded
+    // async function examineSharingURL(shareUrl) {
+    //   // Navigate to the Google Drive sharing URL
+    //   await Page.navigate({ url: shareUrl });
+    //   await Page.loadEventFired(); // Wait until the page has fully loaded
 
-      // Extract file type from the page
-      const result = await Runtime.evaluate({
-        expression: `
-          (function() {
-            const title = document.querySelector('title').innerText;
-            if (title.includes('Google Docs')) {
-              return 'document';
-            } else if (title.includes('Google Sheets')) {
-              return 'spreadsheet';
-            } else if (title.includes('Google Slides')) {
-              return 'presentation';
-            } else {
-              return 'undefined';
-            }
-          })()
-        `
-      });
+    //   // Extract file type from the page
+    //   const result = await Runtime.evaluate({
+    //     expression: `
+    //       (function() {
+    //         const title = document.querySelector('title').innerText;
+    //         if (title.includes('Google Docs')) {
+    //           return 'document';
+    //         } else if (title.includes('Google Sheets')) {
+    //           return 'spreadsheet';
+    //         } else if (title.includes('Google Slides')) {
+    //           return 'presentation';
+    //         } else {
+    //           return 'undefined';
+    //         }
+    //       })()
+    //     `
+    //   });
 
-      // Extract filename, typically from the title or URL
-      const title = document.querySelector('title').innerText;
-      const titleMatch = title.match(/(.*) - /);
+    //   // Extract filename, typically from the title or URL
+    //   const title = document.querySelector('title').innerText;
+    //   const titleMatch = title.match(/(.*) - /);
 
-      return { type: result.result.value, name: titleMatch[1] };
-    }
-    let filepath;
+    //   return { type: result.result.value, name: titleMatch[1] };
+    // }
+
+    let filepath; // filepath as discovered by the download of the URL (content-disposition will tell us.)
     client.on("Page.downloadProgress", async (event) => {
       if (event.state == "completed") {
         console.log("DOWNLOAD_COMPLETED");
 
-        let filepath_dest = lib.replacePathPrefix( filepath, tmpdir, outdir );
-        if (fs.existsSync(filepath_dest) {
+        let filepath_dest = filename ? path.join( outdir, filename + "." + lib.getFileExt(filepath) ) : lib.replacePathPrefix( filepath, tmpdir, outdir );
+        if (fs.existsSync(filepath_dest)) {
           console.log(` o  Destination exists, removing: ${filepath_dest}`);
           fs.unlinkSync( filepath_dest );
         }
         console.log(` o  Moving File: "${filepath}" -> "${filepath_dest}`);
         fs.renameSync( filepath, filepath_dest )
         filepath = undefined;
+        filename = undefined; // clear the requested filename
         await doNext();
       }
     });

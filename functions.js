@@ -109,10 +109,13 @@ function gdriveFileToExportURL( f, format ) {
 module.exports.gdriveFileToExportURL = gdriveFileToExportURL
 
 function gdriveExportUrlChangeFormat( driveShareURL, format ) {
-  let id = getID( driveShareURL )
-  let type = getType( driveShareURL )
-  let new_url = getExportUrl( type, id, format );
-  return new_url;
+  if (driveShareURL.match( /^https?:\/\// )) {
+    let id = getID( driveShareURL )
+    let type = getType( driveShareURL )
+    let new_url = getExportUrl( type, id, format );
+    return new_url;
+  }
+  return driveShareURL;
 }
 module.exports.gdriveExportUrlChangeFormat = gdriveExportUrlChangeFormat
 
@@ -177,3 +180,9 @@ function extractFilenameStar_FromContentDisposition(contentDisposition) {
   return undefined;
 }
 module.exports.extractFilenameStar_FromContentDisposition = extractFilenameStar_FromContentDisposition
+
+function getFileExt(filename) {
+  const match = filename.match(/\.([a-zA-Z0-9]+)(?:[\?#]|$)/);
+  return match ? match[1] : undefined;
+}
+module.exports.getFileExt = getFileExt
