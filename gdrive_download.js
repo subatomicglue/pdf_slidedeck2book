@@ -23,17 +23,6 @@ let format = "pdf"
 let VERBOSE=false;
 let LIST_ONLY=false;
 
-// let testing=`attachment; filename="AmmonU-StudyNotes.pdf"; filename*=UTF-8''Ammon%20U%20-%20Study%20Notes.pdf`
-// function extractFilenameStar(contentDisposition) {
-//   const match = contentDisposition.match(/filename\*=(?:UTF-8''|)(["']?)(.*?)\1(?:;|$)/i);
-//   if (match) {
-//       return decodeURIComponent(match[2]); // Decode URL encoding if present
-//   }
-//   return undefined;
-// }
-// console.log( extractFilenameStar(testing) );
-// process.exit(-1)
-
 /////////////////////////////////////
 // scan command line args:
 function usage()
@@ -298,13 +287,13 @@ if (LIST_ONLY) {
         console.log("DOWNLOAD_COMPLETED");
 
         let filepath_dest = lib.replacePathPrefix( filepath, tmpdir, outdir );
-        if (fs.existsSync(lib.replacePathPrefix( filepath, tmpdir, outdir ))) {
+        if (fs.existsSync(filepath_dest) {
           console.log(` o  Destination exists, removing: ${filepath_dest}`);
           fs.unlinkSync( filepath_dest );
         }
         console.log(` o  Moving File: "${filepath}" -> "${filepath_dest}`);
         fs.renameSync( filepath, filepath_dest )
-        filepath=undefined;
+        filepath = undefined;
         await doNext();
       }
     });
@@ -316,7 +305,7 @@ if (LIST_ONLY) {
         console.log( `[filename] "${filename}"` )
         if (filename) {
           filepath = path.join(tmpdir, filename);
-          console.log(` o  File incoming: "${filename}" -> "${tmpdir}`);          
+          console.log(` o  File incoming: "${filename}" -> "${tmpdir}`);
           if (fs.existsSync(filepath)) {
             console.log(` o  Destination exists, removing: ${filepath}`);
             fs.unlinkSync( filepath );
