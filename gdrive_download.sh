@@ -8,7 +8,7 @@ cwd=`pwd`
 
 ####
 source "$scriptdir/functions.sh"
-PDF2BOOK_CMD="$scriptdir/pdf_slidedeck2book.sh"
+#PDF2BOOK_CMD="$scriptdir/pdf_slidedeck2book.sh"
 dt=`filename_date`
 OUT="./${dt}-out-download"
 
@@ -16,6 +16,7 @@ OUT="./${dt}-out-download"
 args=()
 VERBOSE=false
 ASSETFILE="assets.dat"
+USE_ID_NAMES=false
 
 ################################
 # scan command line args:
@@ -24,9 +25,13 @@ function usage
   echo "$scriptname  download google drive URLs as exported [docx, pptx, pdfs] files"
   echo "Usage:"
   echo "  $scriptname <outdir> <assets.dat>   (outdir; gdrive URLs & titles)"
+  echo "  $scriptname --id                    (use IDs for filenames)"
   echo "  $scriptname --help                  (this help)"
   echo "  $scriptname --verbose               (output verbose information)"
   echo ""
+  echo "use ../pdf_slidedeck2book/gdrive_scan_folder.sh > assets.dat"
+  echo "this script only works with public gdrive documents, private ones cannot be read without cookies + session, which we dont have"
+  echo "see gdrive_download.js to automate your chrome browser, which has the cookies + session"
 }
 ARGC=$#
 ARGV=("$@")
@@ -39,6 +44,10 @@ for ((i = 0; i < ARGC; i++)); do
   fi
   if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--verbose" ]]; then
     VERBOSE=true
+    continue
+  fi
+  if [[ $ARGC -ge 1 && ${ARGV[$i]} == "--id" ]]; then
+    USE_ID_NAMES=true
     continue
   fi
   if [[ $ARGC -ge 1 && ${ARGV[$i]:0:2} == "--" ]]; then
@@ -95,10 +104,10 @@ echo "Downloading to: \"${OUT}\""
 mkdir -p "${OUT}"
 cd "${OUT}"
 
-if ! google_download_multiple_artifacts "${URL_LIST[@]}"; then
+if ! google_download_multiple_artifacts "${USE_ID_NAMES}" "${URL_LIST[@]}"; then
   echo "[FAILED] to download"
   echo "Command:"
-  echo "   google_download_multiple_artifacts \"${URL_LIST[@]}\""
+  echo "   google_download_multiple_artifacts \"${USE_ID_NAMES}\" \"${URL_LIST[@]}\""
   echo ""
   echo "URL List:"
   echo "${URL_LIST[@]}"

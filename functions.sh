@@ -52,6 +52,23 @@ function google_drive_to_url {
   echo "$URL"
 }
 
+# Log in to the server.  This only needs to be done once.
+#wget --save-cookies cookies.txt \
+#     --keep-session-cookies \
+#     --post-data 'user=foo&password=bar' \
+#     --delete-after \
+#     http://server.com/auth.php
+
+# Now grab the page or pages we care about.
+#wget --load-cookies cookies.txt \
+#     http://server.com/interesting/article.php
+
+# wrks for drive:
+# wget --no-check-certificate --timestamping --show-progress  --load-cookies cookies.txt "https://drive.google.com/uc?export=download&confirm=yes&id=1gUPCF0XYxiXxzhq8Fsu25GuD2KldH396PgtzyrRLXwU"
+#
+# doesnt work for docs:
+# wget --debug --max-redirect==99 --timestamping --show-progress --no-check-certificate --load-cookies cookies.txt --header="Referer: https://docs.google.com/" --header="Origin: https://docs.google.com" --header="Accept-Language: en-US,en;q=0.9" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"  "https://docs.google.com/document/d/1AwR0QOmyTN9QU5L6uLissNDKm5Hm08Kd7xVB8XtqXG0/export/pdf?format=pdf" -O "Fan edits.pdf"
+
 function google_download {
   if [[ "$#" -lt 3 || "$#" -gt 4 ]]; then
     echo "${FUNCNAME[0]}"
@@ -68,8 +85,9 @@ function google_download {
   fi
 
   # use external cookie.txt file:
-  #local COOKIES=""
-  #if [ -f "./cookies.txt" ]; then COOKIES="--use-cookies --load-cookies ./cookies.txt"; fi
+  local COOKIES=""
+  if [ -f "./cookies.txt" ]; then COOKIES="--load-cookies ./cookies.txt"; fi
+  if [ -f "../cookies.txt" ]; then COOKIES="--load-cookies ../cookies.txt"; fi
   #if [ -f "/tmp/cookies.txt" ]; then COOKIES="--use-cookies --load-cookies /tmp/cookies.txt"; fi
 
   if [ -f "${OUTFILE}" ]; then
@@ -90,11 +108,16 @@ function google_download {
   # large file download (uses cookie file to bypass some security thing):
   #CMD="wget $QUIET --load-cookies /tmp/cookies.txt \"${URL}&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "${URL}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=$ID\" -O \"$OUTFILE\"; rm /tmp/cookies.txt"
   #echo "$CMD"
-  if ! eval "$CMD"; then
-    echo "[FAILED] Download of \"$OUTFILE\" failed"
+  local retout=$(eval "$CMD" 2>&1)
+  local retval=$?
+  echo $retval
+  if [ $retval -ne 0 ]; then
+    echo "[FAILED] Download of \"$OUTFILE\" failed with $retval (check URL and sharing permissions)"
     echo "Command was:"
     echo "   $CMD"
     echo ""
+    echo "Output was:"
+    echo "   $retout"
     return -1;
   fi
 
@@ -103,7 +126,7 @@ function google_download {
     echo "Command was:"
     echo "   $CMD"
     echo ""
-    exit false;
+    return -1;
   fi
 
   local file_size=$(wc -c <"$OUTFILE")
@@ -114,7 +137,7 @@ function google_download {
     echo ""
     echo "[INFO] Removing 0 sized \"$OUTFILE\""
     rm "$OUTFILE"
-    exit false;
+    return -1;
   fi
 
   if [ `file --mime-type -b "$OUTFILE"` == "text/html" ]; then
@@ -232,14 +255,29 @@ function google_download_artifacts {
 function google_download_multiple_artifacts() {
   local URL_LIST=("$@")
   local URL_LIST_COUNT=${#URL_LIST[@]}
+  local USE_ID_NAMES=false
   local i=0;
 
   for (( i = 0; i < ${URL_LIST_COUNT}; i = i + 3 )); do
+    #echo "${URL_LIST[$i]}"
+    if [ "${URL_LIST[$i]}" == "true" ] || [ "${URL_LIST[$i]}" == "false" ]; then
+      URL_LIST=("${URL_LIST[@]:1}")
+      URL_LIST_COUNT=${#URL_LIST[@]}
+      USE_ID_NAMES="${URL_LIST[$i]}"
+      #echo "${URL_LIST[$@]}"
+    fi
     # whitespace placeholders are skipped, they'll be used by index.html generator for list breaks.
     if [ "${URL_LIST[$i]}" != "" ]; then
-      if ! google_download_artifacts "${URL_LIST[$i]}" "${URL_LIST[$i + 1]}"; then
-        echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${URL_LIST[$i + 1]}\""
+      local name="${URL_LIST[$i + 1]}"
+      local id="$(google_download_id "${URL_LIST[$i + 1]}")"
+      local filename=$([ "${USE_ID_NAMES}" == "false" ] && echo "${URL_LIST[$i + 1]}" || echo $(google_download_id "${URL_LIST[$i + 1]}") )
+      #echo "google_download_artifacts \"${URL_LIST[$i]}\" \"${filename}\""
+      if ! google_download_artifacts "${URL_LIST[$i]}" "${filename}"; then
+        echo "[FAILED] google_download_artifacts \"${URL_LIST[$i]}\" \"${filename}\""
         return -1
+      fi
+      if [ "${USE_ID_NAMES}" == "true" ]; then
+        ln -s "${filename}" "${name}"  # make a pretty/readable name-link to the id-filename...
       fi
     fi
   done
