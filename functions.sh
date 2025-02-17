@@ -64,7 +64,7 @@ function google_drive_to_url {
 #     http://server.com/interesting/article.php
 
 # wrks for drive:
-# wget --no-check-certificate --timestamping --show-progress  --load-cookies cookies.txt "https://drive.google.com/uc?export=download&confirm=yes&id=1gUPCF0XYxiXxzhq8Fsu25GuD2KldH396PgtzyrRLXwU"
+# wget --no-check-certificate --timestamping --show-progress  --load-cookies cookies.txt "https://drive.google.com/uc?export=download&confirm=yes&id=1234asdfASDF7890"
 #
 # doesnt work for docs:
 # wget --debug --max-redirect==99 --timestamping --show-progress --no-check-certificate --load-cookies cookies.txt --header="Referer: https://docs.google.com/" --header="Origin: https://docs.google.com" --header="Accept-Language: en-US,en;q=0.9" --user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"  "https://docs.google.com/document/d/1AwR0QOmyTN9QU5L6uLissNDKm5Hm08Kd7xVB8XtqXG0/export/pdf?format=pdf" -O "Fan edits.pdf"
