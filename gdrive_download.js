@@ -16,11 +16,23 @@ let cwd=process.cwd()
 // options:
 let args = [];
 let outdir = "./out"
+let tmpdir = "/tmp"
 let scandir = "~/Google Drive"
 let use_scan = false;
 let format = "pdf"
 let VERBOSE=false;
 let LIST_ONLY=false;
+
+// let testing=`attachment; filename="AmmonU-StudyNotes.pdf"; filename*=UTF-8''Ammon%20U%20-%20Study%20Notes.pdf`
+// function extractFilenameStar(contentDisposition) {
+//   const match = contentDisposition.match(/filename\*=(?:UTF-8''|)(["']?)(.*?)\1(?:;|$)/i);
+//   if (match) {
+//       return decodeURIComponent(match[2]); // Decode URL encoding if present
+//   }
+//   return undefined;
+// }
+// console.log( extractFilenameStar(testing) );
+// process.exit(-1)
 
 /////////////////////////////////////
 // scan command line args:
@@ -31,15 +43,13 @@ function usage()
    ${scriptname} --help        (this help)
    ${scriptname} --verbose     (output verbose information)
    ${scriptname} --list        (output list of URLS and exit)
+   ${scriptname} --name        (give a name to the next URL, will be cleared after each URL, so specify before each URL)
    ${scriptname} --scan        (scan the google drive dir recursively for document URLs + paths, to download)
    ${scriptname} --scandir     (Google Drive/ directory made by 'Google Backup and Sync' app, default: ${scandir})
    ${scriptname} --format      (pdf or office, default: ${format})
    ${scriptname} --out         (root outdir, default: ${outdir})
+   ${scriptname} --tmp         (tmp outdir, default: ${tmpdir})
    ${scriptname} <in>          (gdrive export URLs + optional paths to download: "out" "https://..." "out/mydir" "https://...")
-
-   example export url: https://docs.google.com/document/d/1234asdfASDF7890/export?format=pdf
-   will not work with the sharing URL: https://drive.google.com/file/d/1234asdfASDF7890/view?usp=sharing
-   because the type is not known.
 
    paths per URL aren't supported yet (only --out works)...
    dont use paths in the <in> list, only http(s):// args there...
@@ -49,13 +59,19 @@ function usage()
    we'll use chrome-remote-interface to automate your chrome, which has your session
 
    examples:
-   ./gdown_chrome.js --scan --format doc --out "out_doc" --list       # list each doc from "~/Google Drive" folder as an export URL
-   ./gdown_chrome.js --scan --format pdf --out "out_doc"              # download each doc from "~/Google Drive" folder as PDF format
+   ${scriptname}  --scan --format doc --out "out_doc" --list       # list each doc from "~/Google Drive" folder as an export URL
+   ${scriptname}  --scan --format pdf --out "out_doc"              # download each doc from "~/Google Drive" folder as PDF format
 
    # download single document from given export URL (url will be changed to --format type)
-   ./gdown_chrome.js --format doc --out "out_doc" "https://docs.google.com/document/d/1234asdfASDF7890/export?format=docx"
-   ./gdown_chrome.js --format pdf --out "out_pdf" "https://docs.google.com/document/d/1234asdfASDF7890/export?format=docx"
-   ./gdown_chrome.js --format pdf --out "out_pdf" "https://docs.google.com/document/d/1234asdfASDF7890/export?format=docx"
+   ${scriptname}  --format doc --out "out_doc" "https://docs.google.com/document/d/1234asdfASDF7890/export?format=docx"
+   ${scriptname}  --format pdf --out "out_pdf" "https://docs.google.com/document/d/1234asdfASDF7890/export?format=docx"
+   ${scriptname}  --format pdf --out "out_pdf" "https://docs.google.com/document/d/1234asdfASDF7890/export?format=docx"
+
+   # download single document from given edit URL
+   ${scriptname}  --format pdf --out "out_doc" "https://docs.google.com/document/d/1234asdfASDF7890/edit?tab=t.0#heading=h.b6mf9ny36wq2"
+
+   # download single document from given share URL
+   ${scriptname}  --format pdf --out "out_doc" "https://docs.google.com/document/d/1234asdfASDF7890/edit?usp=sharing"
   ` );
 }
 let ARGC = process.argv.length-2; // 1st 2 are node and script name...
@@ -83,6 +99,11 @@ for (let i = 2; i < (ARGC+2); i++) {
   if (ARGV[i] == "--scandir") {
     i+=1;
     scandir=ARGV[i]
+    continue
+  }
+  if (ARGV[i] == "--name") {
+    i+=1;
+    console.log( "name", ARGV[i] )
     continue
   }
   if (ARGV[i] == "--out") {
@@ -205,25 +226,31 @@ if (LIST_ONLY) {
 
     // Set download behavior
     lib.mkpath( outdir )
+    lib.mkpath( tmpdir )
     await client.send('Page.setDownloadBehavior', {
       behavior: 'allow',
-      downloadPath: lib.getAbsolutePath( outdir ),
+      downloadPath: lib.getAbsolutePath( tmpdir ),
     });
 
     client.on("Page.downloadWillBegin", (event) => {
       console.log("DOWNLOAD_STARTED");
     });
 
+
+    async function cleanup() {
+      await client.close();
+      await child.kill('SIGTERM'); // Send a termination signal
+      process.exit( 0 );
+    }
+    
     async function doNext() {
       if (0 < downloadUrls.length) {
-        // TODO: if (isSharingURL( downloadUrls[0] )) downloadUrls[0] = convertSharingToExportURL( examineSharingURL( shareUrl ) )
-
         // pop the next url off the front
         let url = lib.getExportUrl( lib.getType( downloadUrls[0] ), lib.getID( downloadUrls[0] ), format );
         console.log( `downloading: ${downloadUrls[0]} ${lib.getType( downloadUrls[0] )} ${lib.getID( downloadUrls[0] )} ${url}` )
         downloadUrls = downloadUrls.slice(1);
         if (url == null) {
-          process.exit(-1)
+          cleanup()
         }
         isFileFound = true; // reset this
         await client.Page.navigate({ url: url });
@@ -231,9 +258,7 @@ if (LIST_ONLY) {
         console.log(`Download initiated. ${url}`);
         await doNext();
       } else {
-        await client.close();
-        await child.kill('SIGTERM'); // Send a termination signal
-        process.exit( 0 );
+        cleanup()
       }
     }
 
@@ -260,12 +285,26 @@ if (LIST_ONLY) {
           })()
         `
       });
-      return result.result.value; // This will return the inferred file type
-    }
 
+      // Extract filename, typically from the title or URL
+      const title = document.querySelector('title').innerText;
+      const titleMatch = title.match(/(.*) - /);
+
+      return { type: result.result.value, name: titleMatch[1] };
+    }
+    let filepath;
     client.on("Page.downloadProgress", async (event) => {
       if (event.state == "completed") {
         console.log("DOWNLOAD_COMPLETED");
+
+        let filepath_dest = lib.replacePathPrefix( filepath, tmpdir, outdir );
+        if (fs.existsSync(lib.replacePathPrefix( filepath, tmpdir, outdir ))) {
+          console.log(` o  Destination exists, removing: ${filepath_dest}`);
+          fs.unlinkSync( filepath_dest );
+        }
+        console.log(` o  Moving File: "${filepath}" -> "${filepath_dest}`);
+        fs.renameSync( filepath, filepath_dest )
+        filepath=undefined;
         await doNext();
       }
     });
@@ -273,12 +312,14 @@ if (LIST_ONLY) {
       const { response, request } = params;
       const contentDisposition = params.response.headers['content-disposition'];
       if (contentDisposition && contentDisposition.includes('attachment')) {
-        const matches = contentDisposition.match(/filename="([^"]+)"/);
-        if (matches && matches[1]) {
-          const filepath = path.join(outdir, matches[1]);
-          console.log(` o  File incoming: "${matches[1]}"`);          
+        const filename = lib.extractFilenameStar_FromContentDisposition( contentDisposition );
+        console.log( `[filename] "${filename}"` )
+        if (filename) {
+          filepath = path.join(tmpdir, filename);
+          console.log(` o  File incoming: "${filename}" -> "${tmpdir}`);          
           if (fs.existsSync(filepath)) {
-            console.log(` o  Destination exists: ${filepath}`);
+            console.log(` o  Destination exists, removing: ${filepath}`);
+            fs.unlinkSync( filepath );
           }
         }
       }
@@ -299,11 +340,10 @@ if (LIST_ONLY) {
     }
   } catch (err) {
     console.error('Error:', err);
-    child.kill('SIGTERM'); // Send a termination signal
+    cleanup()
   } finally {
     if (client) {
-      await client.close();
-      await child.kill('SIGTERM'); // Send a termination signal
+      cleanup()
     }
   }
 })();

@@ -124,3 +124,56 @@ function mkpath(dirPath) {
   }
 }
 module.exports.mkpath = mkpath
+
+// function isSharingURL( url ) {
+//   return url.match( /^https:\/\/drive\.google\.com\/file\/d\/.*edit\?usp=sharing$/ ) != undefined
+// }
+// module.exports.isSharingURL = isSharingURL
+
+function isExportDocsURL( url ) {
+  return url.match( /^https:\/\/docs\.google\.com\/document\/d\/[^/]+\/export.*$/ ) != undefined
+}
+
+function isExportSlidesURL( url ) {
+  return url.match( /^https:\/\/docs\.google\.com\/presentation\/d\/[^/]+\/export.*$/ ) != undefined
+}
+
+function isExportSheetsURL( url ) {
+  return url.match( /^https:\/\/docs\.google\.com\/spreadsheets\/d\/[^/]+\/export.*$/ ) != undefined
+}
+
+function isExportFileURL( url ) {
+  return url.match( /^https:\/\/drive\.google\.com\/uc\?export.*$/ ) != undefined
+}
+
+function isExportURL( url ) {
+  return  isExportDocsURL( url ) ||
+          isExportSlidesURL( url ) ||
+          isExportSheetsURL( url ) ||
+          isExportFileURL( url )
+}
+module.exports.isExportURL = isExportURL
+
+function replacePathPrefix(filePath, oldPrefix, newPrefix) {
+  const regex = new RegExp(`^${oldPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+  return filePath.replace(regex, newPrefix);
+}
+module.exports.replacePathPrefix = replacePathPrefix
+
+function extractFilename_FromContentDisposition(contentDisposition) {
+  const match = contentDisposition.match(/filename="([^"]+)"/);
+  if (match) {
+      return matches[1];
+  }
+  return undefined;
+}
+module.exports.extractFilename_FromContentDisposition = extractFilename_FromContentDisposition
+
+function extractFilenameStar_FromContentDisposition(contentDisposition) {
+  const match = contentDisposition.match(/filename\*=(?:UTF-8''|)(["']?)(.*?)\1(?:;|$)/i);
+  if (match) {
+      return decodeURIComponent(match[2]); // Decode URL encoding if present
+  }
+  return undefined;
+}
+module.exports.extractFilenameStar_FromContentDisposition = extractFilenameStar_FromContentDisposition
