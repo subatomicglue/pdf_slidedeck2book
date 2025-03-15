@@ -21,7 +21,7 @@ ASSETFILE="assets.dat"
 # scan command line args:
 function usage
 {
-  echo "$scriptname  download google slide/docs pdfs, make book pdfs"
+  echo "$scriptname  download google slide/docs pdfs, make book pdfs (deprecated - requires public access set in gdrive)"
   echo "Usage:"
   echo "  $scriptname <outdir> <assets.dat>   (list of pdf files to process; outdir)"
   echo "  $scriptname --help                  (this help)"
@@ -85,18 +85,8 @@ if [ ! -f "$ASSETFILE" ]; then
   exit -1
 fi
 
-source "${ASSETFILE}"
-URL_ARY=()
-for (( i = 0; i < ${#URL_LIST[@]}; i = i + 3 ))
-do
-  if [ "${URL_LIST[i]}" != "" ]; then
-    URL_ARY+=( "--name" "${URL_LIST[i+1]}" "${URL_LIST[i]}" )
-  fi
-done
 
-echo "${scriptdir}"/gdrive_download.js --format pdf --out "${OUT}" "${URL_ARY[@]}"
-#exit -1
-"${scriptdir}"/gdrive_download.js --format pdf --out "${OUT}" "${URL_ARY[@]}"
+"${scriptdir}"/gdrive_download.sh "${OUT}" "${ASSETFILE}"
 
 "${scriptdir}"/make_books.sh "${OUT}"
 
