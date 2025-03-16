@@ -88,8 +88,9 @@ cd "${OUTDIR}"
 # make books:
 if [ "$INDEX_ONLY" == "0" ]; then
   shopt -s nullglob
-  CMD="$scriptdir/pdf_slidedeck2book.sh \"../${INDIR}/\"*\".pdf\""
-  #echo "$CMD"
+  #CMD="$scriptdir/pdf_slidedeck2book.sh \"${INDIR}/\"*\".pdf\""
+  CMD="$scriptdir/pdf_change_aspect.js --color pixel --margin 0.2 0.2 --aspect 16 9 --dpi 300 \"${INDIR}/\"*\".pdf\""
+  echo "$CMD"
   eval "$CMD"
   shopt -u nullglob
 fi
