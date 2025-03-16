@@ -22,6 +22,7 @@ let use_scan = false;
 let format = "pdf"
 let VERBOSE=false;
 let LIST_ONLY=false;
+let force=false;
 
 /////////////////////////////////////
 // scan command line args:
@@ -38,10 +39,10 @@ function usage()
    ${scriptname} --format      (pdf or office, default: ${format})
    ${scriptname} --out         (root outdir, default: ${outdir})
    ${scriptname} --tmp         (tmp outdir, default: ${tmpdir})
-   ${scriptname} <in>          (gdrive export URLs + optional paths to download: "out" "https://..." "out/mydir" "https://...")
+   ${scriptname} --force       (if the file is already downloaded, force download & overwrite)
+   ${scriptname} <in>          (gdrive export URLs + optional names to download: "filename1" "https://..." "filename2" "https://...")
 
-   paths per URL aren't supported yet (only --out works)...
-   dont use paths in the <in> list, only http(s):// args there...
+   dont use paths in the <in> list.  filenames work.  path/filename per URL aren't supported (only --out works to set the path)...
    --scan wont generate them either.   you'll only get a flat list backed up...
 
    make sure your chrome browser can load urls pointing into your google drive account,
@@ -85,6 +86,10 @@ for (let i = 2; i < (ARGC+2); i++) {
     use_scan=true;
     continue
   }
+  if (ARGV[i] == "--force") {
+    force=true;
+    continue
+  }
   if (ARGV[i] == "--scandir") {
     i+=1;
     scandir=ARGV[i]
@@ -92,6 +97,7 @@ for (let i = 2; i < (ARGC+2); i++) {
   }
   if (ARGV[i] == "--name") {
     i+=1;
+    args.push( ARGV[i] )
     console.log( "name", ARGV[i] )
     continue
   }
@@ -143,7 +149,10 @@ if (downloadUrls.length == 0) {
 
 console.log( "list export URLs" )
 for (let a of downloadUrls) {
-  console.log( a );
+  if (a.match( /^https?:\/\// ) == undefined)
+    process.stdout.write( `'${a}' ` );
+  else
+    console.log( a );
 }
 
 if (LIST_ONLY) {
@@ -174,7 +183,7 @@ if (LIST_ONLY) {
   else {
     // just kill chrome, tabs will reopen, dont worry, be happy.
     spawnSync('pkill -f "Google Chrome"', { stdio: 'ignore', shell: true });
-    child = lib.exec( chrome_exe, [ "--remote-debugging-port=9227"/*, "--profile-directory=\"Default\""*/ /*, `--user-data-dir=${expandTilde( "~/Library/Application Support/Google/Chrome" )}`*/ /*, `--user-data-dir=/tmp/temp_chrome-profile`*/ ] );
+    child = lib.exec( chrome_exe, [ "--remote-debugging-port=9227", "--disable-web-security"/*, "--profile-directory=\"Default\""*/ /*, `--user-data-dir=${expandTilde( "~/Library/Application Support/Google/Chrome" )}`*/ /*, `--user-data-dir=/tmp/temp_chrome-profile`*/ ] );
   }
   console.log( "chrome launched" )
 
@@ -241,17 +250,66 @@ if (LIST_ONLY) {
           downloadUrls = downloadUrls.slice(1);
         }
 
-        // pop the next url off the front
-        let url = lib.getExportUrl( lib.getType( downloadUrls[0] ), lib.getID( downloadUrls[0] ), format );
-        console.log( `downloading: ${downloadUrls[0]} ${lib.getType( downloadUrls[0] )} ${lib.getID( downloadUrls[0] )} ${url}` )
-        downloadUrls = downloadUrls.slice(1);
-        if (url == null) {
-          cleanup()
+      /*
+      console.log( `[debug] ${filename} ${downloadUrls[0]}`, tmpdir, outdir )
+        let 
+      console.log( "[debug]", filepath_dest, filename, fs.existsSync( filepath_dest ) )
+            process.exit(-1);
+      */
+
+        /*
+        if (filename)
+          filepath_dest = path.join( outdir, filename );
+        else {
+          // try to get the filename or type, from the HEAD request, avoid downloading the entire file...
+          console.log( "================================== filename", filename );
+          //let {result} = await client.Runtime.evaluate({
+          //  expression: `fetch("${downloadUrls[0]}", { method: "HEAD", headers: { 'Accept': 'application/json' } }).then(res => res.headers.get("content-type"))`,
+          //  awaitPromise: true
+          //});
+          //console.log( "[HEAD] ", result.value )
+          //process.exit( -1 )
+          // discover the filename from the header
+          await client.Network.setRequestInterception({ patterns: [{ urlPattern: '*' }] });
+          fetching_header_only_url=downloadUrls[0]
+          await client.Page.navigate({ url: downloadUrls[0] });
+          filepath_dest = filename ? path.join( outdir, filename + "." + lib.getFileExt(filepath) ) : lib.replacePathPrefix( filepath, tmpdir, outdir );;
+          console.log( "[HEAD] ", filepath_name, filepath_dest )
+
+          process.exit( -1 );
         }
-        isFileFound = true; // reset this
-        await client.Page.navigate({ url: url });
-        await client.Page.loadEventFired();
-        console.log(`Download initiated. ${url}`);
+        */
+
+        //console.log( filepath_dest, fs.existsSync( filepath_dest ) )
+        //process.exit( -1 )
+        //console.log( "Checking: ", path.join( outdir, filename + ".pdf" ) );
+        if (force == true || filename == undefined ||
+             (!fs.existsSync( path.join( outdir, filename + ".pdf" ) ) &&
+              !fs.existsSync( path.join( outdir, filename + ".docx" ) ) &&
+              !fs.existsSync( path.join( outdir, filename + ".pptx" ) ) &&
+              !fs.existsSync( path.join( outdir, filename + ".xlsx" ) ) 
+             )
+        ) {
+          // pop the next url off the front
+          let url = lib.getExportUrl( lib.getType( downloadUrls[0] ), lib.getID( downloadUrls[0] ), format );
+          console.log( `downloading: ${downloadUrls[0]} ${lib.getType( downloadUrls[0] )} ${lib.getID( downloadUrls[0] )} ${url}` )
+          downloadUrls = downloadUrls.slice(1);
+          if (url == null) {
+            cleanup()
+          }
+          isFileFound = true; // reset. we'll set it to false later, if the URL gave us 404 result
+          await client.Page.navigate({ url: url });
+          await client.Page.loadEventFired();
+          console.log(`Download initiated. ${url}`);
+        } else {
+          // if a named filename exists in the outdir already...
+          let url = lib.getExportUrl( lib.getType( downloadUrls[0] ), lib.getID( downloadUrls[0] ), format );
+          console.log( `skipping: ${filename}` )
+          downloadUrls = downloadUrls.slice(1);
+          if (url == null) {
+            cleanup()
+          }
+        }
         await doNext();
       } else {
         cleanup()
@@ -302,23 +360,62 @@ if (LIST_ONLY) {
         console.log(` o  Moving File: "${filepath}" -> "${filepath_dest}`);
         fs.renameSync( filepath, filepath_dest )
         filepath = undefined;
+        filepath_name = undefined;
         filename = undefined; // clear the requested filename
         await doNext();
       }
     });
+
+    /*
+    let fetching_header_only_url=undefined;
+    let fetching_header_only_interception_id=undefined;
+
+    // Abort the request when it's detected
+    client.Network.requestIntercepted(({ interceptionId, request }) => {
+      let url = request.url
+      console.log(`requestIntercepted: int:${interceptionId}, url:${url}`, fetching_header_only_url);
+      if (false) {// || request.url.includes(fetching_header_only_url)) {
+        console.log(`Aborting download request: ${interceptionId}`);
+        client.Network.continueInterceptedRequest({
+            interceptionId,
+            errorReason: 'Aborted' // This cancels the request
+        });
+      } else {
+        fetching_header_only_interception_id = interceptionId;
+        // Allow other requests to proceed normally
+        client.Network.continueInterceptedRequest({ interceptionId });
+      }
+    });
+    */
+
     client.Network.responseReceived((params) => {
       const { response, request } = params;
+      //const contentType = response.headers['content-type'] || null;
+      //console.log( `[contentType] "${contentType}"` )
       const contentDisposition = params.response.headers['content-disposition'];
       if (contentDisposition && contentDisposition.includes('attachment')) {
         const filename = lib.extractFilenameStar_FromContentDisposition( contentDisposition );
         console.log( `[filename] "${filename}"` )
         if (filename) {
           filepath = path.join(tmpdir, filename);
+          filepath_name = filename;
           console.log(` o  File incoming: "${filename}" -> "${tmpdir}`);
-          if (fs.existsSync(filepath)) {
-            console.log(` o  Destination exists, removing: ${filepath}`);
-            fs.unlinkSync( filepath );
-          }
+          /*
+          if (fetching_header_only_url)
+            client.Network.setRequestInterception({ patterns: [] }).catch(console.error);
+            fetching_header_only_url = undefined;
+
+            console.log(`Aborting download request: ${fetching_header_only_interception_id}`);
+            client.Network.continueInterceptedRequest({
+                fetching_header_only_interception_id,
+                errorReason: 'Aborted' // This cancels the request
+            });
+          } else { */
+            if (fs.existsSync(filepath)) {
+              console.log(` o  Destination exists, removing: ${filepath}`);
+              fs.unlinkSync( filepath );
+            }
+          //}
         }
       }
 
@@ -328,6 +425,7 @@ if (LIST_ONLY) {
         console.log('Error: File Not Found!');
       }
     });
+
 
     // Navigate to the download URL
     await doNext();
