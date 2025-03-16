@@ -50,6 +50,8 @@ function usage()
     ${scriptname} --color avg --aspect 16 10 --margin 0.2 0.2 --dpi 300 myfile.pdf
     ${scriptname} --color auto --aspect 16 10 --margin 0.2 0.2 --dpi 300 myfile.pdf
     ${scriptname} --color 33 33 33 --aspect 16 10 --margin 0.2 0.2 --dpi 300 myfile.pdf
+
+    NOTE: run from a different directory, it'll output the same filename. this script is non-destructive to input filenames, safe to run, simply skips writing files already present.
   ` );
 }
 const ARGC = process.argv.length-2; // 1st 2 are node and script name...
@@ -237,14 +239,6 @@ async function scaleAllPagesWithMargin(inputFile, outputFile, newWidth, newHeigh
     const scaled_width = scaledWidth
     const scaled_height = scaledHeight
 
-    // Draw the original page onto the new page, scaled and respecting margins
-    newPage.drawPage(embeddedPage, {
-      x: scaled_x, // Ensure minimum left/right margin
-      y: scaled_y, // Ensure minimum top/bottom margin
-      width: scaled_width,
-      height: scaled_height,
-    });
-
     // { r: 255, g: 255, b: 255 }
     let margin_color = (typeof color === "object") ? color : colorFuncs[color] ? colorFuncs[color](inputFile, i) : { r: 255, g: 255, b: 255 }
 
@@ -253,10 +247,28 @@ async function scaleAllPagesWithMargin(inputFile, outputFile, newWidth, newHeigh
     const newA = getAspect( newWidth, newHeight )
     console.log( `[${path.basename(inputFile)}] Page ${i} : `, currentAspect, currentWidth, currentHeight, `${currentA.aspect_x}x${currentA.aspect_y}`, " : ", newA.aspect, newWidth, newHeight, `${newWidth/dpi}x${newHeight/dpi}`, " : ", margin_color )
 
+    // background colorfill
+    newPage.drawRectangle({
+      x: 0,
+      y: 0,
+      width: newWidth,
+      height: newHeight,
+      color: rgb(margin_color.r/255, margin_color.g/255, margin_color.b/255),
+    });
+
+    // Draw the original page onto the new page, scaled and respecting margins
+    newPage.drawPage(embeddedPage, {
+      x: scaled_x, // Ensure minimum left/right margin
+      y: scaled_y, // Ensure minimum top/bottom margin
+      width: scaled_width,
+      height: scaled_height,
+    });
+
 
     // margin color - rectangle fills (0,0 is lower left corner)
     let tol=1;
 
+    /*
     // bottom
     newPage.drawRectangle({
       x: scaled_x,
@@ -290,7 +302,7 @@ async function scaleAllPagesWithMargin(inputFile, outputFile, newWidth, newHeigh
       height: newHeight,
       color: rgb(margin_color.r/255, margin_color.g/255, margin_color.b/255),
     });
-
+*/
   }
 
   // Save the modified PDF
@@ -308,13 +320,12 @@ async function scaleAllPagesWithMargin(inputFile, outputFile, newWidth, newHeigh
     for (let infile of args) {
       let outfile_base = path.basename(infile, path.extname(infile))
       if (fs.existsSync( outfile_base + ".pdf" )) {
-        outfile_base += "-adjusted.pdf"
+        console.log( `SKIPPING '${outfile_base + ".pdf"}' already exists` )
+        continue
       } else {
         outfile_base += ".pdf"
+        await scaleAllPagesWithMargin(infile, outfile_base, aspect_x * dpi, aspect_y * dpi, margin_x * dpi, margin_y * dpi, color);
       }
-
-      //await drawRectangleOnPDF(infile, outfile_base, aspect_x, aspect_y);
-      await scaleAllPagesWithMargin(infile, outfile_base, aspect_x * dpi, aspect_y * dpi, margin_x * dpi, margin_y * dpi, color);
     }
   }
 })()
