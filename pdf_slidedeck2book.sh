@@ -168,22 +168,22 @@ trap ctrl_c SIGINT
 
 function getWidth {
   local FILENAME="$1"
-  echo `convert "$FILENAME" -format "%w" info:`
+  echo `magick convert "$FILENAME" -format "%w" info:`
 }
 function getHeight {
   local FILENAME="$1"
-  echo `convert "$FILENAME" -format "%h" info:`
+  echo `magick convert "$FILENAME" -format "%h" info:`
 }
 function getColor_Avg {
   local FILENAME="$1"
-  echo `convert -colorspace sRGB "$FILENAME" -resize 1x1\! -format "%[fx:int(255*r+.5)],%[fx:int(255*g+.5)],%[fx:int(255*b+.5)]" info:-`
+  echo `magick convert -colorspace sRGB "$FILENAME" -resize 1x1\! -format "%[fx:int(255*r+.5)],%[fx:int(255*g+.5)],%[fx:int(255*b+.5)]" info:-`
 }
 function getColor_TopLeftPixel {
   local FILENAME="$1"
   local HEIGHT=`getHeight "$FILENAME"`
   local X=1
   local Y=1
-  echo `convert -colorspace sRGB "$FILENAME" -format "%[fx:int(255*p{$X,$Y}.r)],%[fx:int(255*p{$X,$Y}.g)],%[fx:int(255*p{$X,$Y}.b)]" info:`
+  echo `magick convert -colorspace sRGB "$FILENAME" -format "%[fx:int(255*p{$X,$Y}.r)],%[fx:int(255*p{$X,$Y}.g)],%[fx:int(255*p{$X,$Y}.b)]" info:`
 }
 
 function addMargin {
@@ -251,7 +251,6 @@ function addMarginToPNGs {
   done
   shopt -u nullglob
 }
-
 
 # do the work:
 function process {
